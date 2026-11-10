@@ -225,3 +225,13 @@ Frozen feed refusal at buy, close and settle; gap below deductible pays 0; cap b
 | E1 submission pack | README sections present |
 
 Note: I did not run the optional build-system manifest/orchestrator pipeline. Your A to E delivery order is the plan, and the table above carries the gate per task.
+
+## 13. Design system (binding for all dashboard views)
+
+Design guide set by Peter on Nov 8. Applies when the dashboard is built in delivery C; no UI code exists before then. Cinematic dark: bg #0B0B0C, text #F5F5F7, one neon accent (#C6FF3D) on exactly one micro element per viewport (the live dot). Three colors maximum.
+
+- Layout: no card grids, no symmetric boxes. 27% / 73% split, edge-to-edge, padding `clamp(1.25rem, 4vw, 6rem)`, overlapping and absolutely positioned decorative type, 1px architectural wires as dividers.
+- Type: hyper-scaled serif headlines (`clamp(4rem, 10vw, 14rem)`, line height 0.85, tight tracking), outline (text-stroke) display lines, 10px uppercase mono labels at 0.25em tracking and 60% opacity. System font stacks for now (no network font fetch in the build); swap in licensed faces later.
+- Shadows: hard offsets only, or none. No blur.
+- Motion: `cubic-bezier(0.16, 1, 0.3, 1)` at 700ms. Buttons are magnetic and mask-reveal their label from below. Honors `prefers-reduced-motion`.
+- Plain CSS, no Tailwind, so there is no extra build dependency.
