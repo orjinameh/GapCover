@@ -168,7 +168,9 @@ contract CoverPool {
 }
 ```
 
-Errors (named, tested): `SessionNotActive, SaleClosed, FeedFrozen, FeedStale, BadAnswer, NotHolder, BelowMinNotional, CapacityExceeded, TooManyCovers, PoolLocked, NotKeeper, BadSchedule, NotClosable, NotSettleable, PrintBeforeOpen, PrintTooLate, NotFirstPrint, RoundNotProvable, MultiplierChanged, NotVoidable, NothingToClaim`.
+Errors (named, all tested): `Reentrancy, BadConfig, NotKeeper, BadSchedule, SessionNotActive, SaleClosed, BadTier, ZeroAmount, ZeroShares, FeedFrozen, FeedStale, BadAnswer, NotHolder, BelowMinNotional, CapacityExceeded, TooManyCovers, PoolLocked, NotClosable, NotSettleable, PrintBeforeOpen, PrintTooLate, NotFirstPrint, RoundNotProvable, MultiplierChanged, NotVoidable, NothingToClaim, InsufficientShares`. A frozen feed at settle surfaces as `PrintBeforeOpen` (the named round predates the open). A frozen feed at purchase is `FeedFrozen`, a stale reference at close is `FeedStale`.
+
+Implementation notes (built in delivery B, small deltas from the text above): `settle` is also refused after `openTime + printWindow + voidGrace`, so settle and void never overlap. Insurable interest is cumulative per holder per session. The close snapshot uses the latest print at call time (between close and close + lockWindow), not a historical round.
 
 Mock deviations from the real thing, all flagged: mock aggregator pushRound is open to anyone on the demo deployment; MockB20 has an open `mint` and an open `scheduleUIMultiplier`; MockSessionKeeper lets anyone schedule compressed sessions. None of that exists in the pool.
 
