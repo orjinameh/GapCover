@@ -2,7 +2,7 @@
 
 On-chain parametric cover for the weekend gap on tokenized stocks on Base. Base Sepolia testnet only. Mock tokens and feeds, no real funds.
 
-Status: contracts, tests and dashboard done (deliveries B and C). Deployment guide and submission pack follow. Design in docs/spec.md.
+Status: contracts, tests, dashboard and deploy guide done. Submission pack follows. Deploy steps in docs/deploy.md. Design in docs/spec.md.
 
 ## Tests
 
