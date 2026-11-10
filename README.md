@@ -1,23 +1,41 @@
 # Gap Cover
 
-On-chain parametric cover for the weekend gap on tokenized stocks on Base. Base Sepolia testnet only.
+On-chain parametric cover for the weekend gap on tokenized stocks on Base. Base Sepolia testnet only. Mock tokens and feeds, no real funds.
 
-Status: contracts and tests done (delivery B). Dashboard, deploy and submission pack follow. Design in docs/spec.md.
+Status: contracts, tests and dashboard done (deliveries B and C). Deployment guide and submission pack follow. Design in docs/spec.md.
 
-## Run the tests
+## Tests
 
 ```bash
-forge test            # 81 tests: unit, fuzz, invariants
-forge test -vv --match-contract CoverPoolSettle
+forge test
 ```
 
-Foundry pins solc 0.8.28 and downloads it on first run. forge-std is vendored in lib/ (no submodules).
+## Dashboard
+
+```bash
+cd app && npm install
+cp .env.example .env.local      # fill after deploying, see below
+npm run dev
+```
+
+Deploy the demo stack (needs a fresh burner wallet funded from a Base Sepolia faucet, key in a local .env):
+
+```bash
+cp .env.example .env            # set DEPLOYER_PRIVATE_KEY and BASE_SEPOLIA_RPC_URL
+set -a && source .env && set +a
+forge script script/Deploy.s.sol --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast
+node scripts/write-env.mjs 84532   # writes app/.env.local from deployments/84532.json
+```
+
+Repeated demo runs drain the seeded pool a little each time (underwriters pay the gap). Top it up from the Underwrite desk.
 
 ## Layout
 
 ```
-src/CoverPool.sol            pool, cover, settlement (one pool per ticker)
-src/interfaces/              Chainlink V3 and B20 stock interfaces
-src/mocks/                   testnet mocks: B20 token, aggregator, USDC, spot market, session keeper
-test/                        Core, Settle, Invariant and fuzz, Mocks
+src/CoverPool.sol         pool, cover, settlement (one pool per ticker)
+src/mocks/                testnet mocks: B20 token, aggregator, USDC, spot market, session keeper
+script/Deploy.s.sol       demo deployment with compressed timings
+scripts/write-env.mjs     deployments json to app/.env.local
+app/                      Next.js dashboard (viem, plain CSS)
+test/                     unit, fuzz, invariant, mocks
 ```
