@@ -2,46 +2,41 @@
 
 Testnet only. Base Sepolia chain id 84532. Mock tokens, mock feed, mock USDC. No real funds, no mainnet, never your main wallet.
 
-## 1. Burner wallet
+## 1. Burner wallet, saved to .env for you
 
 ```bash
-cd /workspaces/GapCover
-cp .env.example .env
-cast wallet new
+node scripts/setup-burner.mjs
 ```
 
-`cast wallet new` prints an address and a private key. Put the private key in `.env` as `DEPLOYER_PRIVATE_KEY=` (the file is git ignored, check with `git status` that `.env` never appears). Send the address some Base Sepolia ETH from any Base Sepolia faucet. 0.02 ETH is plenty. Keep the default `BASE_SEPOLIA_RPC_URL`, or put your own provider URL.
+This creates a fresh wallet and writes its key into `.env` by itself. The key is never printed and never needs copying. It prints the public address and also saves it in `burner-address.txt`, so you can open that file and copy the address as real text. Re-running it keeps the same wallet.
 
-## 2. Check the balance
+Send that address some Base Sepolia ETH from any Base Sepolia faucet. 0.02 ETH is plenty.
+
+To make the terminal wait until the money lands:
 
 ```bash
-set -a && source .env && set +a
-cast balance $(cast wallet address --private-key "$DEPLOYER_PRIVATE_KEY") --rpc-url "$BASE_SEPOLIA_RPC_URL"
+node scripts/setup-burner.mjs --wait
 ```
 
-Must be above 0.
-
-## 3. Dry run, then deploy
+## 2. Deploy, one command
 
 ```bash
-forge script script/Deploy.s.sol --rpc-url "$BASE_SEPOLIA_RPC_URL"
-forge script script/Deploy.s.sol --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast
+bash scripts/deploy-sepolia.sh
 ```
 
-The first command simulates and sends nothing. If the second is interrupted, rerun it with `--resume`. It writes `deployments/84532.json` and prints six addresses: pool, stock, usdc, feed, spot, keeper.
+It checks the RPC is Base Sepolia (chain 84532) and the burner has ETH, deploys, writes `deployments/84532.json` and `app/.env.local`, and prints the six addresses. If it stops halfway, run the same command again.
 
-## 4. Record the addresses
+## 3. Commit the addresses
 
 ```bash
-node scripts/write-env.mjs 84532
 git add deployments/84532.json
 git commit -m "Record Base Sepolia deployment"
 git push
 ```
 
-`app/.env.local` is git ignored on purpose, it is regenerated from the JSON.
+`.env`, `app/.env.local` and `burner-address.txt` are git ignored on purpose. Check `git status` shows none of them.
 
-## 5. Verify on chain
+## 4. Verify on chain
 
 ```bash
 POOL=$(node -p "require('./deployments/84532.json').pool")
@@ -52,7 +47,7 @@ cast call $POOL "activeSession()(uint256)" --rpc-url "$BASE_SEPOLIA_RPC_URL" # e
 
 Each address also opens at `https://sepolia.basescan.org/address/<address>`.
 
-## 6. Run the dashboard
+## 5. Run the dashboard
 
 ```bash
 cd app
@@ -64,7 +59,7 @@ Open the forwarded port 3000. The demo wallet is a throwaway key the browser mak
 
 If a run is interrupted, press Run the weekend again, it voids the stuck session when the rules allow, or tells you how long to wait.
 
-## 7. Optional: demo URL on Vercel
+## 6. Optional: demo URL on Vercel
 
 1. Push the repo to GitHub (already done).
 2. Vercel, Add New Project, import the repo.

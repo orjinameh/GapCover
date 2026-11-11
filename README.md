@@ -14,17 +14,14 @@ forge test
 
 ```bash
 cd app && npm install
-cp .env.example .env.local      # fill after deploying, see below
 npm run dev
 ```
 
-Deploy the demo stack (needs a fresh burner wallet funded from a Base Sepolia faucet, key in a local .env):
+Deploy the demo stack to Base Sepolia (details in docs/deploy.md):
 
 ```bash
-cp .env.example .env            # set DEPLOYER_PRIVATE_KEY and BASE_SEPOLIA_RPC_URL
-set -a && source .env && set +a
-forge script script/Deploy.s.sol --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast
-node scripts/write-env.mjs 84532   # writes app/.env.local from deployments/84532.json
+node scripts/setup-burner.mjs    # makes a burner, saves its key to .env, prints the address to fund
+bash scripts/deploy-sepolia.sh   # deploys and writes app/.env.local
 ```
 
 Repeated demo runs drain the seeded pool a little each time (underwriters pay the gap). Top it up from the Underwrite desk.

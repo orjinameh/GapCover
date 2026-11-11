@@ -7,3 +7,5 @@ broadcast/
 .next/
 *.log
 .DS_Store
+
+burner-address.txt
