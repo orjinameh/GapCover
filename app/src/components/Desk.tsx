@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { DEMO_TOKENS, DEPLOYED, need } from "@/lib/config";
-import { POOL_ABI, STOCK_ABI, USDC_ABI } from "@/lib/abis";
-import { STATUS, ensureAllowance, phaseOf, send } from "@/lib/chain";
+import { DEMO, DEMO_TOKENS, DEPLOYED, need } from "@/lib/config";
+import { FEED_ABI, KEEPER_ABI, POOL_ABI, SPOT_ABI, STOCK_ABI, USDC_ABI } from "@/lib/abis";
+import { STATUS, ensureAllowance, phaseOf, pub, send } from "@/lib/chain";
 import { fmtPx, fmtTokens, fmtUsd, notionalOf, parseTokens, parseUsd, payoutOf, premiumOf } from "@/lib/math";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
@@ -14,6 +14,7 @@ export default function Desk() {
   const [tokens, setTokens] = useState("100");
   const [tierIdx, setTierIdx] = useState(1);
   const [amount, setAmount] = useState("1000");
+  const [gapPct, setGapPct] = useState("6");
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -51,6 +52,11 @@ export default function Desk() {
   const util = snap.totalAssets > 0n && snap.session ? Number((snap.session.reserved * 10_000n) / snap.totalAssets) / 100 : 0;
   const yieldPct = (Number(snap.sharePrice) / 1e18 - 1) * 100;
   const sess = snap.session;
+  const status = sess?.status ?? STATUS.None;
+  const canOpen = !!signer && !busy && (phase.phase === "idle");
+  const canClose = !!signer && !busy && phase.phase === "frozen" && status === STATUS.Scheduled;
+  const canSettle = !!signer && !busy && phase.phase === "await" && status === STATUS.Closed;
+  const canVoid = !!signer && !busy && !!sess && (status === STATUS.Scheduled || status === STATUS.Closed) && phase.phase !== "sale";
   const settledPreview = sess && sess.status === STATUS.Closed ? payoutOf(notional, tier, sess.refPrice, snap.feedPrice) : null;
 
   return (
@@ -78,6 +84,61 @@ export default function Desk() {
           <div className="col">
             <h2 className="h2">Cover desk</h2>
             <p className="meta">{phase.label}</p>
+            <div className="btnrow btnrow--tight">
+              <MagneticButton
+                small
+                label="Open demo session"
+                disabled={!canOpen}
+                onClick={() =>
+                  void act("Open session", async () => {
+                    if (signer) await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO.closeIn, DEMO.openIn]);
+                  })
+                }
+              />
+              <MagneticButton
+                small
+                label="Close session"
+                disabled={!canClose}
+                onClick={() =>
+                  void act("Close session", async () => {
+                    if (signer) await send(signer, need("pool"), POOL_ABI, "closeSession", [snap.activeId]);
+                  })
+                }
+              />
+            </div>
+            <div className="btnrow btnrow--tight">
+              <label className="gapin">
+                <span className="meta">Gap %</span>
+                <input value={gapPct} inputMode="decimal" onChange={(e) => setGapPct(e.target.value)} />
+              </label>
+              <MagneticButton
+                small
+                label="Print open and settle"
+                disabled={!canSettle}
+                onClick={() =>
+                  void act("Settle", async () => {
+                    if (!signer || !sess) return;
+                    const g = BigInt(Math.round(Math.max(0, Math.min(Number(gapPct) || 0, 90)) * 100));
+                    const price = (sess.refPrice * (10_000n - g)) / 10_000n;
+                    await send(signer, need("feed"), FEED_ABI, "pushRound", [price]);
+                    await send(signer, need("spot"), SPOT_ABI, "setPrice", [need("stock"), price]);
+                    const r = (await pub.readContract({ address: need("feed"), abi: FEED_ABI, functionName: "latestRoundData" })) as readonly [bigint, bigint, bigint, bigint, bigint];
+                    await send(signer, need("pool"), POOL_ABI, "settle", [snap.activeId, r[0]]);
+                  })
+                }
+              />
+              <MagneticButton
+                small
+                label="Void session"
+                disabled={!canVoid}
+                onClick={() =>
+                  void act("Void session", async () => {
+                    if (signer) await send(signer, need("pool"), POOL_ABI, "voidSession", [snap.activeId]);
+                  })
+                }
+              />
+            </div>
+            <p className="meta">Any wallet can run the whole weekend by hand: open, buy, close, print, settle. Buttons light up when the clock allows.</p>
             <label className="field-in">
               <span className="meta">Tokens to cover (raw)</span>
               <input value={tokens} inputMode="decimal" onChange={(e) => setTokens(e.target.value)} />

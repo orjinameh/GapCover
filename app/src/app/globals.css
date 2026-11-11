@@ -266,3 +266,7 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: v
 .side--covered .rows { max-width: calc(50% - 1rem); }
 .hero, .sim, .desk { scroll-margin-top: 2.8rem; }
 @media (max-width: 860px) { .side--covered .rows { max-width: none; } }
+
+.btnrow--tight { margin: 1rem 0; gap: 1rem 1.2rem; align-items: flex-end; }
+.gapin { display: block; width: 5.5rem; }
+.gapin input { display: block; width: 100%; padding: 0.5rem 0; background: none; color: var(--fg); border: 0; border-bottom: 1px solid rgba(245,245,247,0.5); font-family: var(--serif); font-size: 1.6rem; outline: none; }
