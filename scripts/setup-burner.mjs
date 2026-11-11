@@ -4,9 +4,11 @@
 // to burner-address.txt so you can open the file and copy the address as real text.
 // --wait polls the balance until the burner is funded.
 import { execFileSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 
-const wait = process.argv.includes("--wait");
+// iPad keyboards turn -- into a long dash, so accept those too
+const wait = process.argv.slice(2).some((a) => /^[-\u2010-\u2015\u2212]{1,2}wait$/.test(a));
 
 if (!existsSync(".env")) {
   writeFileSync(".env", readFileSync(".env.example", "utf8"));
@@ -25,8 +27,11 @@ const set = (name, value) => {
 let key = get("DEPLOYER_PRIVATE_KEY");
 let created = false;
 if (!/^0x[0-9a-fA-F]{64}$/.test(key)) {
-  const out = JSON.parse(execFileSync("cast", ["wallet", "new", "--json"], { encoding: "utf8" }));
-  key = out[0].private_key;
+  // 32 random bytes from the OS is a valid secp256k1 key (the chance of it being out of range is about 1 in 2^128)
+  const N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+  let n = 0n;
+  while (n === 0n || n >= N) n = BigInt("0x" + randomBytes(32).toString("hex"));
+  key = "0x" + n.toString(16).padStart(64, "0");
   set("DEPLOYER_PRIVATE_KEY", key);
   writeFileSync(".env", env);
   created = true;

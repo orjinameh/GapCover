@@ -39,13 +39,10 @@ git push
 ## 4. Verify on chain
 
 ```bash
-POOL=$(node -p "require('./deployments/84532.json').pool")
-cast call $POOL "totalAssets()(uint256)" --rpc-url "$BASE_SEPOLIA_RPC_URL"   # expect 100000000000 (100,000 mUSDC)
-cast call $POOL "tiersLength()(uint256)" --rpc-url "$BASE_SEPOLIA_RPC_URL"   # expect 3
-cast call $POOL "activeSession()(uint256)" --rpc-url "$BASE_SEPOLIA_RPC_URL" # expect 0
+bash scripts/verify-deploy.sh
 ```
 
-Each address also opens at `https://sepolia.basescan.org/address/<address>`.
+It reads the pool address from `deployments/84532.json` and prints the pool, chain id, total assets, tier count and active session, each with the value to expect. Each address also opens at `https://sepolia.basescan.org/address/<address>`.
 
 ## 5. Run the dashboard
 
