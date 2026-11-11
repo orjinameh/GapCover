@@ -2,7 +2,7 @@
 
 On-chain parametric cover for the weekend gap on tokenized stocks on Base. Base Sepolia testnet only. Mock tokens and feeds, no real funds.
 
-Status: contracts, tests, dashboard and deploy guide done. Submission pack follows. Deploy steps in docs/deploy.md. Design in docs/spec.md.
+Status: contracts, tests, product dashboard and deploy guide done. Submission pack follows. Deploy steps in docs/deploy.md. Design in docs/spec.md.
 
 ## Tests
 
@@ -11,6 +11,8 @@ forge test
 ```
 
 ## Dashboard
+
+Pages: Cover (buy cover, quote, My covers, claim), Underwrite (deposit, withdraw, pool stats), Demo (one click weekend simulator and manual session controls for the video). Connect a browser wallet, or use the built in test wallet. Works on laptop and phone widths.
 
 ```bash
 cd app && npm install

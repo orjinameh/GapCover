@@ -237,3 +237,7 @@ Design guide set by Peter on Nov 8. Applies when the dashboard is built in deliv
 - Shadows: hard offsets only, or none. No blur.
 - Motion: `cubic-bezier(0.16, 1, 0.3, 1)` at 700ms. Buttons are magnetic and mask-reveal their label from below. Honors `prefers-reduced-motion`.
 - Plain CSS, no Tailwind, so there is no extra build dependency.
+
+## 14. Product pass (Nov 11)
+
+The dashboard was reorganised product first: Cover, Underwrite and Demo pages, wallet sheet with browser wallet or test wallet, network check, quote with a payout scenario table, My covers with claim. The weekend simulator and manual session controls live only on the Demo page. CoverPool gained `holderCoverCount` and `holderCoverAt` so a wallet can list its covers without scanning logs.

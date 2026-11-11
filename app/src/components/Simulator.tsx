@@ -1,6 +1,7 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DEMO_TOKENS, DEPLOYED, IS_LOCAL, START_PRICE, TICKER } from "@/lib/config";
+import { pub } from "@/lib/chain";
 import { STEPS, runWeekend, uncoveredAddress, type SimResult, type StepState } from "@/lib/sim";
 import { fmtPx, fmtSigned, fmtUsd, notionalOf, payoutOf, premiumOf, type Tier } from "@/lib/math";
 import { useApp } from "./state";
@@ -33,7 +34,19 @@ export default function Simulator() {
   const expected = useMemo(() => payoutOf(notional, tier, START_PRICE, settle), [notional, tier, settle]);
   const move = ((DEMO_TOKENS * settle) / 10n ** 20n) - ((DEMO_TOKENS * START_PRICE) / 10n ** 20n);
 
-  const lowGas = !!demo && !!snap?.me && snap.me.address === demo.address && snap.me.eth < MIN_ETH && !IS_LOCAL;
+  const [demoEth, setDemoEth] = useState<bigint | null>(null);
+  useEffect(() => {
+    if (!demo) return;
+    let live = true;
+    const read = () => pub.getBalance({ address: demo.address }).then((b) => live && setDemoEth(b)).catch(() => {});
+    void read();
+    const id = setInterval(read, 4000);
+    return () => {
+      live = false;
+      clearInterval(id);
+    };
+  }, [demo]);
+  const lowGas = !!demo && demoEth !== null && demoEth < MIN_ETH && !IS_LOCAL;
   const ready = DEPLOYED && !!demo && !running && !lowGas;
 
   async function run() {
@@ -119,7 +132,7 @@ export default function Simulator() {
           <p className="meta">
             Demo wallet (throwaway, testnet)<br />
             {demo ? short(demo.address) : "…"}
-            {snap?.me && snap.me.address === demo?.address ? ` · ${(Number(snap.me.eth) / 1e18).toFixed(4)} ETH` : ""}
+            {demoEth !== null ? ` · ${(Number(demoEth) / 1e18).toFixed(4)} ETH` : ""}
           </p>
           {lowGas && demo && (
             <p className="meta warn">Send Base Sepolia ETH from a faucet to {demo.address} to pay gas.</p>

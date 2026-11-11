@@ -76,6 +76,11 @@ contract CoverPool {
     mapping(uint256 => Session) internal sessions;
     mapping(uint256 => Cover[]) internal covers;
     mapping(uint256 => mapping(address => uint256)) public coveredRaw;
+    struct CoverRef {
+        uint64 sessionId;
+        uint32 coverId;
+    }
+    mapping(address => CoverRef[]) internal holderCovers;
     uint256 public sessionCount;
     uint256 public activeSession; // id of the non terminal session, 0 if none
 
@@ -271,6 +276,7 @@ contract CoverPool {
 
         coverId = covers[id].length;
         covers[id].push(Cover(msg.sender, tier, uint128(notional), uint128(premium), uint128(maxPayout)));
+        holderCovers[msg.sender].push(CoverRef(uint64(id), uint32(coverId)));
         s.reserved += uint128(maxPayout);
         s.premiums += uint128(premium);
         s.coverCount += 1;
@@ -365,6 +371,17 @@ contract CoverPool {
 
     function getCover(uint256 id, uint256 coverId) external view returns (Cover memory) {
         return covers[id][coverId];
+    }
+
+    /// Number of covers a holder has ever bought, across all sessions.
+    function holderCoverCount(address holder) external view returns (uint256) {
+        return holderCovers[holder].length;
+    }
+
+    /// i-th cover of a holder, oldest first.
+    function holderCoverAt(address holder, uint256 i) external view returns (uint256 sessionId, uint256 coverId) {
+        CoverRef memory r = holderCovers[holder][i];
+        return (r.sessionId, r.coverId);
     }
 
     function tiersLength() external view returns (uint256) {

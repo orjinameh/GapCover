@@ -54,7 +54,7 @@ npm run dev
 
 Open the forwarded port 3000. The demo wallet is a throwaway key the browser makes for itself. On first load the Simulator rail shows its address and asks for gas. Send that address a little Base Sepolia ETH (0.005 is plenty), then press Run the weekend. A run takes about 90 seconds on Base Sepolia (the session is compressed to 40s to close and 80s to open). The covered wallet should net -260.00, the uncovered one -600.00 at the default 6% gap and Standard tier.
 
-You can also run the weekend by hand from the Cover desk, with the demo wallet or a browser wallet. The banner says "No session scheduled" until someone opens one, that is normal. Press Open demo session, buy cover within 40 seconds, press Close session once the banner says the market is closed, then Print open and settle once it says awaiting first print. Buttons only light up when the clock allows.
+You can also run the weekend by hand from the Demo page, with the test wallet or a browser wallet. The banner says "No session scheduled" until someone opens one, that is normal. Press Open session on the Demo page, then on the Cover page buy within 40 seconds, press Close session once the banner says the market is closed, then Print open and settle once it says awaiting first print. Buttons only light up when the clock allows.
 
 If a run is interrupted, press Run the weekend again, it voids the stuck session when the rules allow, or tells you how long to wait.
 
@@ -67,6 +67,12 @@ If a run is interrupted, press Run the weekend again, it voids the stuck session
 5. Deploy. Open the URL once and run the weekend to confirm.
 
 The demo wallet key lives in each visitor's own browser storage, never on the server. It is testnet only.
+
+## Pages
+
+- Cover: the product page. Connect, get test funds, buy cover while a session is on sale, see it under My covers, claim if a payout could not be pushed.
+- Underwrite: deposit mUSDC, withdraw when the pool is unlocked.
+- Demo: the one click weekend and the manual session controls. Use it to open a session, since on this testnet nobody runs the keeper.
 
 ## Notes
 

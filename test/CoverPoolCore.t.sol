@@ -317,4 +317,29 @@ contract CoverPoolCore is Base {
         vm.expectRevert(CoverPool.NothingToClaim.selector);
         pool.claim();
     }
+
+    function test_holderCoverIndexAcrossSessions() public {
+        _schedule();
+        _buy(h1, 100e18, 1);
+        _buy(h2, 100e18, 0);
+        _buy(h1, 50e18, 2);
+        assertEq(pool.holderCoverCount(h1), 2);
+        assertEq(pool.holderCoverCount(h2), 1);
+        (uint256 s0, uint256 c0) = pool.holderCoverAt(h1, 0);
+        (uint256 s1, uint256 c1) = pool.holderCoverAt(h1, 1);
+        assertEq(s0, sid);
+        assertEq(c0, 0);
+        assertEq(s1, sid);
+        assertEq(c1, 2);
+        assertEq(pool.getCover(s1, c1).holder, h1);
+        // next session keeps appending
+        vm.warp(closeTime + LOCK_WINDOW + 1);
+        pool.voidSession(sid);
+        feed.pushRound(100e8);
+        _schedule();
+        _buy(h1, 100e18, 1);
+        (uint256 s2,) = pool.holderCoverAt(h1, 2);
+        assertEq(s2, 2);
+        assertEq(pool.holderCoverCount(h1), 3);
+    }
 }
