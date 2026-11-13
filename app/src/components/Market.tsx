@@ -160,6 +160,7 @@ export default function Market() {
           than the level you chose, you are paid automatically. If there is no reliable opening price, nothing is paid and you get your fee back.
         </p>
         <p className="meta">1. Pick how much stock to protect. 2. Pay a small fee. 3. If it opens lower, you are paid automatically. If it does not, you are out only the fee and you keep your stock.</p>
+        <p className="meta"><b>Is this for you?</b> Protection costs a small fee, and most nights you will not need it. It is meant for nights when a big surprise could hurt you, such as holding through earnings. It is not a way to make money.</p>
         <details className="lede lede--wide">
           <summary className="meta">The details, in plain words</summary>
           <p className="meta"><b>What we pay for:</b> the stock opens lower than where it closed, by more than the first part of the loss that you absorb yourself.</p>
@@ -168,6 +169,15 @@ export default function Market() {
           <p className="meta"><b>Example:</b> You protect $10,000 of stock with Standard. It opens 6% lower, a $600 loss. You absorb the first 2% ($200). We pay the next 4%: $400. You paid a $60 fee. Without protection you are down $600. With it, you are down $260. If the stock had opened 1% lower, or higher, you would get nothing and be out only the $60 fee.</p>
           <p className="meta"><b>Where the price comes from:</b> on this test version, a made-up price that anyone can change. A real version would use a trusted market price.</p>
           <p className="meta"><b>Is this real?</b> No. Practice stock, play money, no real insurance.</p>
+        </details>
+        <details className="lede lede--wide">
+          <summary className="meta">Common questions</summary>
+          <p className="meta"><b>What if the stock goes up?</b> You pay the fee and get nothing back, but your shares gain. If the gain is smaller than the fee, you end up slightly down overall. For example, with a 0.6% fee, a 0.3% rise leaves you 0.3% down.</p>
+          <p className="meta"><b>Does it expire?</b> Yes. Each protection covers one overnight gap only, from when you buy it until the market opens and the opening price is checked. After that it ends, whether or not you were paid. It does not renew by itself, so buy again for the next night. Over a weekend, the whole weekend counts as one gap.</p>
+          <p className="meta"><b>Which price counts?</b> The last price before the close, compared with the first fresh price after the open. If the stock drops at the open and recovers later that day, you are still paid, because the opening price is what counts. If it only falls later in the day, you are not paid.</p>
+          <p className="meta"><b>Do I need to own the stock?</b> Yes. You must hold the shares when you buy, and you can protect no more than you hold.</p>
+          <p className="meta"><b>Can I cancel?</b> No. Once you buy, the fee is not refunded, unless the round is cancelled because there was no reliable opening price or a company event such as a split.</p>
+          <p className="meta"><b>Do I have to claim my payout?</b> No. It is sent to you automatically when the round ends. In rare cases where a transfer fails, a Claim button appears under My protection.</p>
         </details>
 
         <div className="flow">
