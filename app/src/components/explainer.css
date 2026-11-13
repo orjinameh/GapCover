@@ -1,0 +1,112 @@
+/* Animated explainers: Explainer (cover page) and PoolFlow (liquidity page). Plain CSS, uses the site tokens. */
+
+.ex, .pf { width: 100%; max-width: 62rem; }
+.ex svg, .pf svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+.ex__top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.6rem 2rem; margin-bottom: 0.6rem; }
+.ex__cap { margin: 1.2rem 0 0; max-width: 40rem; }
+.ex__src { margin-top: 1.6rem; max-width: 46rem; text-transform: none; letter-spacing: 0.08em; }
+.ex__range { display: block; margin-top: 2rem; }
+.ex__chips { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+
+/* svg parts */
+.ex-lab { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; fill: var(--fg); opacity: 0.6; }
+.ex-lab--strong { opacity: 1; }
+.ex-wire { stroke: var(--fg); stroke-opacity: 0.28; stroke-width: 1; }
+.ex-solid { fill: var(--fg); }
+.ex-bgfill { fill: var(--bg); }
+.ex-ray { stroke: var(--fg); stroke-width: 1.6; stroke-linecap: round; }
+.ex-lock { fill: none; stroke: var(--fg); stroke-width: 2; }
+.ex-line { fill: none; stroke: var(--fg); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ex-gap { stroke: var(--fg); stroke-width: 2; }
+.ex-dash { stroke: var(--fg); stroke-opacity: 0.55; stroke-width: 1.5; stroke-dasharray: 2 8; }
+.ex-dots { stroke: var(--fg); stroke-opacity: 0.55; stroke-width: 1.5; stroke-dasharray: 2 5; }
+.ex-thresh { stroke: var(--fg); stroke-opacity: 0.4; stroke-width: 1; stroke-dasharray: 3 4; }
+.ex-loss { fill: var(--fg); fill-opacity: 0.28; }
+.ex-paid { fill: var(--acc); }
+.ex-coin { fill: var(--acc); }
+.ex-wallet { fill: none; stroke: var(--fg); stroke-width: 1.5; }
+
+/* motion */
+.ex-move { transition: transform 900ms var(--ease); }
+.ex-draw { stroke-dasharray: 460; stroke-dashoffset: 460; animation: ex-draw 1.2s var(--ease) 0.1s forwards; }
+@keyframes ex-draw { to { stroke-dashoffset: 0; } }
+.ex-dash { animation: ex-march 2.4s linear infinite; }
+@keyframes ex-march { to { stroke-dashoffset: -20; } }
+.ex-rays { transform-box: fill-box; transform-origin: center; animation: ex-spin 28s linear infinite; }
+@keyframes ex-spin { to { transform: rotate(360deg); } }
+.ex-star { animation: ex-twinkle 2.2s ease-in-out infinite; }
+@keyframes ex-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
+.ex-news { animation: ex-news 2.6s var(--ease) infinite; }
+@keyframes ex-news { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.18) rotate(6deg); } }
+.ex .ex-coin { animation: ex-coin 1.7s var(--ease) infinite; }
+@keyframes ex-coin {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(var(--fall, 80px)); opacity: 0; }
+}
+
+/* controls */
+.ex-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid rgba(245, 245, 247, 0.5);
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: background 300ms var(--ease), color 300ms var(--ease);
+}
+.ex-chip:hover { background: rgba(245, 245, 247, 0.12); }
+.ex-chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.ex-chip:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+
+.ex-range { width: 100%; appearance: none; -webkit-appearance: none; height: 1px; background: rgba(245, 245, 247, 0.5); outline: none; margin: 1.6rem 0 0.2rem; }
+.ex-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: var(--fg); border: 0; box-shadow: 3px 3px 0 rgba(245, 245, 247, 0.25); cursor: grab; }
+.ex-range::-moz-range-thumb { width: 20px; height: 20px; background: var(--fg); border: 0; border-radius: 0; cursor: grab; }
+.ex-range:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--acc); outline-offset: 3px; }
+.ex-range:focus-visible::-moz-range-thumb { outline: 2px solid var(--acc); outline-offset: 3px; }
+
+/* money readout */
+.ex-sum { display: flex; flex-wrap: wrap; margin-top: 1.4rem; border-top: 1px solid rgba(245, 245, 247, 0.28); }
+.ex-sum > div { flex: 1 1 8rem; padding: 0.9rem 1rem 0.9rem 0; border-bottom: 1px solid rgba(245, 245, 247, 0.28); }
+.ex-sum dt { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.25em; opacity: 0.6; }
+.ex-sum dd { font-size: clamp(1.1rem, 1.6vw, 1.7rem); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; margin-top: 0.3rem; }
+.ex-sum__end dd { font-size: clamp(1.4rem, 2.2vw, 2.4rem); }
+
+/* PoolFlow */
+.pf-tank { fill: none; stroke: var(--fg); stroke-width: 1.5; }
+.pf-level { fill: var(--fg); fill-opacity: 0.22; transform-box: fill-box; transform-origin: bottom; animation: pf-level 10s var(--ease) infinite; }
+.pf-slice { fill: none; stroke: var(--fg); stroke-width: 1; stroke-dasharray: 3 4; }
+@keyframes pf-level {
+  0% { transform: scaleY(0.7); }
+  55% { transform: scaleY(0.92); }
+  62% { transform: scaleY(0.92); }
+  72% { transform: scaleY(0.74); }
+  100% { transform: scaleY(0.7); }
+}
+.pf .pf-fee { animation: pf-fee 10s var(--ease) infinite; }
+@keyframes pf-fee {
+  0% { transform: translateX(0); opacity: 0; }
+  3% { opacity: 1; }
+  13% { transform: translateX(250px); opacity: 1; }
+  15%, 100% { transform: translateX(250px); opacity: 0; }
+}
+.pf .pf-pay { animation: pf-pay 10s var(--ease) infinite; opacity: 0; }
+@keyframes pf-pay {
+  0%, 60% { transform: translateX(0); opacity: 0; }
+  62% { opacity: 1; }
+  72% { transform: translateX(255px); opacity: 1; }
+  74%, 100% { transform: translateX(255px); opacity: 0; }
+}
+.pf__cap { margin-top: 1rem; max-width: 40rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ex *, .pf * { animation: none !important; transition: none !important; }
+  .ex-draw { stroke-dashoffset: 0; }
+  .pf .pf-fee, .pf .pf-pay { opacity: 0; }
+  .pf-level { transform: scaleY(0.8); }
+}

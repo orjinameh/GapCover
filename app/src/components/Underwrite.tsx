@@ -6,6 +6,7 @@ import { ensureAllowance, send } from "@/lib/chain";
 import { fmtUsd, parseUsd } from "@/lib/math";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
+import PoolFlow from "./PoolFlow";
 
 export default function Underwrite() {
   const { snap, signer, setWalletOpen, wrongNetwork, switchNetwork, refresh } = useApp();
@@ -62,15 +63,11 @@ export default function Underwrite() {
       <aside className="rail">
         <p className="meta">Provide liquidity</p>
         <p className="lede">
-          Other people pay a fee to protect their stocks. You put in money that pays them if their stock drops. In return, you earn a share of those fees.
-          If the stocks do not drop, no payout is made and you keep your share of the fees as profit. If a payout happens, your share of that cost comes out of your money, so you can lose part of what you put in.
+          You add money that pays people when their stock drops, and you earn their fees. No drops? You keep the fees. Big drop? You can lose some of your money.
         </p>
-        <p className="meta">
-          You are not buying a new coin. You add USDC and get shares that track your slice of the pool. A share is worth more as fees arrive and less when payouts are made.
-        </p>
+        <p className="meta">You get pool shares, not a new coin.</p>
         <p className="meta rail__foot">
-          You cannot add or take out money while stock protection is active. This stops people joining at the last minute for the fees, or leaving early to avoid a loss.
-        </p>
+          Locked while protection is active, so nobody joins late or leaves early.</p>
       </aside>
       <div className="stage">
         <p className="meta">{snap?.locked ? "Locked until the current round ends" : "Open: you can add or take out money"}</p>
@@ -78,6 +75,8 @@ export default function Underwrite() {
           <span className="display__row">Earn from</span>
           <span className="display__row display__row--outline">the fees.</span>
         </h1>
+
+        <PoolFlow />
 
         <dl className="rows">
           <div><dt>Total money in the pool</dt><dd>{snap ? fmtUsd(snap.totalAssets) : "…"} USDC</dd></div>
@@ -114,9 +113,8 @@ export default function Underwrite() {
           {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
         </div>
         <div className="meta field__legal">
-          <p><b>The risk:</b> you can lose some or all of the money you add. If a stock drops a lot, the pool pays the people who bought protection, and that cost is shared by everyone in the pool, including you.</p>
-          <p>Your money is stuck while protection is active, so you cannot take it out early.</p>
-          <p><b>This is a test:</b> the pool was filled with play money by the developer, not by real investors. Nothing here is real money or real insurance. Not financial advice.</p>
+          <p><b>The risk:</b> you can lose some or all of the money you add. Your money is stuck while protection is active.</p>
+          <p><b>This is a test:</b> the pool holds play money put in by the developer. Nothing here is real money or real insurance. Not financial advice.</p>
         </div>
       </div>
     </section>

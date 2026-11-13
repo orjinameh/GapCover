@@ -7,6 +7,7 @@ import { fmtPx, fmtSigned, fmtTokens, fmtUsd, notionalOf, parseTokens, payoutOf,
 import { readMyCovers, STATE_TEXT, type MyCover } from "@/lib/covers";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
+import Explainer from "./Explainer";
 
 const when = (ts: bigint) => new Date(Number(ts) * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 const GAPS = [3, 6, 10, 20];
@@ -155,29 +156,21 @@ export default function Market() {
           <span className="display__row display__row--outline">overnight drops.</span>
         </h1>
         <p className="lede lede--wide">
-          The market closes. News comes out. The next morning your stock opens much lower, and you never had a chance to sell.
-          GapCover pays you part of that loss. Pick how much stock to protect, pay a small fee now, and if the stock opens lower
-          than the level you chose, you are paid automatically. If there is no reliable opening price, nothing is paid and you get your fee back.
+          The market closes, news hits, the stock opens lower. We pay part of the loss. No drop? You lose only the fee.
         </p>
-        <p className="meta">1. Pick how much stock to protect. 2. Pay a small fee. 3. If it opens lower, you are paid automatically. If it does not, you are out only the fee and you keep your stock.</p>
-        <p className="meta"><b>Is this for you?</b> Protection costs a small fee, and most nights you will not need it. It is meant for nights when a big surprise could hurt you, such as holding through earnings. It is not a way to make money.</p>
-        <details className="lede lede--wide">
-          <summary className="meta">The details, in plain words</summary>
-          <p className="meta"><b>What we pay for:</b> the stock opens lower than where it closed, by more than the first part of the loss that you absorb yourself.</p>
-          <p className="meta"><b>What we do not pay for:</b> drops while the market is open, drops that bounce back before the open, share splits and similar company events (you get your fee back), and the first part of any loss that you absorb.</p>
-          <p className="meta"><b>If the stock does not drop:</b> nothing is paid. If it opens flat, higher, or lower by less than the first part you absorb, you lose only the fee. The fee is not refunded. It is the price of the protection, like car insurance. You keep your shares and any gain. The fee goes to the people who provide the payout money.</p>
-          <p className="meta"><b>Example:</b> You protect $10,000 of stock with Standard. It opens 6% lower, a $600 loss. You absorb the first 2% ($200). We pay the next 4%: $400. You paid a $60 fee. Without protection you are down $600. With it, you are down $260. If the stock had opened 1% lower, or higher, you would get nothing and be out only the $60 fee.</p>
-          <p className="meta"><b>Where the price comes from:</b> on this test version, a made-up price that anyone can change. A real version would use a trusted market price.</p>
-          <p className="meta"><b>Is this real?</b> No. Practice stock, play money, no real insurance.</p>
-        </details>
+        <Explainer tier={view?.tier} tierName={view?.tier.name} />
         <details className="lede lede--wide">
           <summary className="meta">Common questions</summary>
-          <p className="meta"><b>What if the stock goes up?</b> You pay the fee and get nothing back, but your shares gain. If the gain is smaller than the fee, you end up slightly down overall. For example, with a 0.6% fee, a 0.3% rise leaves you 0.3% down.</p>
-          <p className="meta"><b>Does it expire?</b> Yes. Each protection covers one overnight gap only, from when you buy it until the market opens and the opening price is checked. After that it ends, whether or not you were paid. It does not renew by itself, so buy again for the next night. Over a weekend, the whole weekend counts as one gap.</p>
-          <p className="meta"><b>Which price counts?</b> The last price before the close, compared with the first fresh price after the open. If the stock drops at the open and recovers later that day, you are still paid, because the opening price is what counts. If it only falls later in the day, you are not paid.</p>
-          <p className="meta"><b>Do I need to own the stock?</b> Yes. You must hold the shares when you buy, and you can protect no more than you hold.</p>
-          <p className="meta"><b>Can I cancel?</b> No. Once you buy, the fee is not refunded, unless the round is cancelled because there was no reliable opening price or a company event such as a split.</p>
-          <p className="meta"><b>Do I have to claim my payout?</b> No. It is sent to you automatically when the round ends. In rare cases where a transfer fails, a Claim button appears under My protection.</p>
+          <p className="meta"><b>Is this for you?</b> Only if a surprise overnight drop would really hurt, for example holding through earnings. Most nights you will not need it. It is not a way to make money.</p>
+          <p className="meta"><b>What if the stock goes up?</b> You pay the fee and keep the gain. If the gain is smaller than the fee, you end up slightly down.</p>
+          <p className="meta"><b>Does it expire?</b> Yes. It covers one gap, from when you buy until the opening price is checked. It does not renew. A weekend counts as one gap.</p>
+          <p className="meta"><b>Which price counts?</b> The last price before the close against the first fresh price after the open. A drop at the open that recovers later still pays.</p>
+          <p className="meta"><b>What is not covered?</b> Drops during trading hours, the first part you absorb, and company events like splits (those cancel the round and refund your fee).</p>
+          <p className="meta"><b>Do I need to own the stock?</b> Yes, when you buy, and you can protect no more than you hold.</p>
+          <p className="meta"><b>Can I cancel?</b> No. The fee is only refunded if the round is cancelled.</p>
+          <p className="meta"><b>Do I claim my payout?</b> No, it is sent automatically. If a transfer fails, a Claim button appears under My protection.</p>
+          <p className="meta"><b>Where does the price come from?</b> On this test version, a made-up price anyone can change. A real version would use a trusted market price.</p>
+          <p className="meta"><b>Is this real?</b> No. Practice stock, play money, no real insurance.</p>
         </details>
 
         <div className="flow">
