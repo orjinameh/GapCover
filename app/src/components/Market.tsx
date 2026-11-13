@@ -159,12 +159,13 @@ export default function Market() {
           GapCover pays you part of that loss. Pick how much stock to protect, pay a small fee now, and if the stock opens lower
           than the level you chose, you are paid automatically. If there is no reliable opening price, nothing is paid and you get your fee back.
         </p>
-        <p className="meta">1. Pick how much stock to protect. 2. Pay a small fee. 3. If it opens lower, you are paid automatically.</p>
+        <p className="meta">1. Pick how much stock to protect. 2. Pay a small fee. 3. If it opens lower, you are paid automatically. If it does not, you are out only the fee and you keep your stock.</p>
         <details className="lede lede--wide">
           <summary className="meta">The details, in plain words</summary>
           <p className="meta"><b>What we pay for:</b> the stock opens lower than where it closed, by more than the first part of the loss that you absorb yourself.</p>
           <p className="meta"><b>What we do not pay for:</b> drops while the market is open, drops that bounce back before the open, share splits and similar company events (you get your fee back), and the first part of any loss that you absorb.</p>
-          <p className="meta"><b>Example:</b> You protect $10,000 of stock with Standard. It opens 6% lower, a $600 loss. You absorb the first 2% ($200). We pay the next 4%: $400. You paid a $60 fee. Without protection you are down $600. With it, you are down $260.</p>
+          <p className="meta"><b>If the stock does not drop:</b> nothing is paid. If it opens flat, higher, or lower by less than the first part you absorb, you lose only the fee. The fee is not refunded. It is the price of the protection, like car insurance. You keep your shares and any gain. The fee goes to the people who provide the payout money.</p>
+          <p className="meta"><b>Example:</b> You protect $10,000 of stock with Standard. It opens 6% lower, a $600 loss. You absorb the first 2% ($200). We pay the next 4%: $400. You paid a $60 fee. Without protection you are down $600. With it, you are down $260. If the stock had opened 1% lower, or higher, you would get nothing and be out only the $60 fee.</p>
           <p className="meta"><b>Where the price comes from:</b> on this test version, a made-up price that anyone can change. A real version would use a trusted market price.</p>
           <p className="meta"><b>Is this real?</b> No. Practice stock, play money, no real insurance.</p>
         </details>

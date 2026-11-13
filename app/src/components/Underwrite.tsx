@@ -63,7 +63,7 @@ export default function Underwrite() {
         <p className="meta">Provide liquidity</p>
         <p className="lede">
           Other people pay a fee to protect their stocks. You put in money that pays them if their stock drops. In return, you earn a share of those fees.
-          If a payout happens, your share of that cost comes out of your money, so you can lose part of what you put in.
+          If the stocks do not drop, no payout is made and you keep your share of the fees as profit. If a payout happens, your share of that cost comes out of your money, so you can lose part of what you put in.
         </p>
         <p className="meta">
           You are not buying a new coin. You add USDC and get shares that track your slice of the pool. A share is worth more as fees arrive and less when payouts are made.
