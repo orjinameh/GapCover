@@ -151,14 +151,22 @@ export default function Market() {
       <div className="stage">
         <p className="meta">Programmable stock markets · parametric cover</p>
         <h1 className="display display--md">
-          <span className="display__row">Insure the</span>
-          <span className="display__row display__row--outline">weekend gap.</span>
+          <span className="display__row">Protect your stocks against</span>
+          <span className="display__row display__row--outline">overnight drops.</span>
         </h1>
         <p className="lede lede--wide">
-          Tokenized stocks trade all weekend, but their price feed freezes when the market closes. Buy cover before the close. If the first
-          fresh price after the open is lower than the last price before it, by more than your deductible, the contract pays you automatically.
-          If the feed stays frozen, nothing settles and your premium is refunded.
+          GapCover helps protect tokenized stock positions against big price drops between market close and the next market opening.
+          Choose a stock, pick your protection level and pay a premium. If the stock opens below the agreed threshold, you can receive a payout.
+          If no reliable opening price is available, nothing settles and your premium is refunded.
         </p>
+        <details className="lede lede--wide">
+          <summary className="meta">What is covered, what is not, and where the price comes from</summary>
+          <p className="meta"><b>Covered:</b> a fall in the stock&apos;s price between the last price before the close and the first fresh price after the open, beyond your deductible, up to your cap.</p>
+          <p className="meta"><b>Not covered:</b> price moves during trading hours, drops that recover before the open, losses from a stock split or other corporate action (the session is cancelled and premiums refunded), hacks, and anything below your deductible.</p>
+          <p className="meta"><b>How a payout is calculated:</b> you are paid for the part of the drop beyond your deductible, up to your cap, multiplied by the value you covered. Example: 6% drop, 2% deductible, 10% cap pays 4% of your covered value.</p>
+          <p className="meta"><b>Where the price comes from:</b> on this testnet, a mock price feed that anyone can move. It is not a real market price. A live version would settle only on the first fresh price a trusted equity feed publishes after the open.</p>
+          <p className="meta"><b>Real or simulated:</b> everything here is simulated. Mock tokens, mock prices, no real money, no real insurance.</p>
+        </details>
 
         <div className="flow">
           <div className="flow__step">

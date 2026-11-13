@@ -60,10 +60,14 @@ export default function Underwrite() {
   return (
     <section className="market">
       <aside className="rail">
-        <p className="meta">Underwriters</p>
+        <p className="meta">Provide liquidity · underwriting</p>
         <p className="lede">
-          Underwriters supply the capital that pays holders. You earn the premiums. You lose part of your deposit when a gap is paid out.
-          Every cover is fully collateralized, so the pool can never owe more than it holds.
+          Liquidity providers supply the money that pays protection claims. In return, they earn a share of the premiums paid by customers.
+          They also bear the risk of losses when claims are paid. Every cover is fully collateralized, so the pool can never owe more than it holds.
+        </p>
+        <p className="meta">
+          You deposit USDC and receive pool shares, which are accounting entries, not a new token. Your shares track your slice of the pool.
+          The share price rises as premiums arrive and falls when claims are paid.
         </p>
         <p className="meta rail__foot">
           Deposits and withdrawals are closed while any cover is outstanding, so nobody joins late for the premium or leaves early to dodge a loss.
@@ -110,7 +114,11 @@ export default function Underwrite() {
           </div>
           {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
         </div>
-        <p className="meta field__legal">Underwriting carries smart contract risk even with test money. Unaudited. Not an offer or advice.</p>
+        <div className="meta field__legal">
+          <p><b>What you are accepting:</b> you can lose part or all of your deposit if covers are paid out. A sharp gap on one stock can cost the pool up to the sum of the maximum payouts reserved for that session.</p>
+          <p>Your funds are locked while any cover is outstanding, so you cannot withdraw before a session settles. There is also smart contract risk, and the product is unaudited.</p>
+          <p><b>Real or simulated:</b> this pool is seeded with mock USDC from the deployer wallet. It is not independent underwriting capital, and no real money is at stake. Not an offer or advice.</p>
+        </div>
       </div>
     </section>
   );

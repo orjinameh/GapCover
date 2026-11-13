@@ -10,7 +10,7 @@ import { useApp } from "./state";
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const NAV = [
   { href: "/", label: "Cover" },
-  { href: "/underwrite", label: "Underwrite" },
+  { href: "/underwrite", label: "Provide Liquidity" },
   { href: "/demo", label: "Demo" },
 ];
 
