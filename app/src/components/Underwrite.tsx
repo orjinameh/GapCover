@@ -42,13 +42,13 @@ export default function Underwrite() {
   if (!signer) dep = { label: "Connect wallet", onClick: () => setWalletOpen(true) };
   else if (wrongNetwork) dep = { label: `Switch to ${CHAIN.name}`, onClick: () => void switchNetwork() };
   else if (snap && me) {
-    if (snap.locked) dep = { label: "Locked while cover is outstanding", disabled: true };
+    if (snap.locked) dep = { label: "Locked while stock protection is active", disabled: true };
     else if (a === 0n) dep = { label: "Enter an amount", disabled: true };
-    else if (a > me.usdc) dep = { label: "Not enough mUSDC", disabled: true };
+    else if (a > me.usdc) dep = { label: "Not enough test dollars", disabled: true };
     else if (busy) dep = { label: "Confirm in wallet…", disabled: true };
     else
       dep = {
-        label: `Deposit ${fmtUsd(a)} USDC`,
+        label: `Add ${fmtUsd(a)} USDC`,
         onClick: () =>
           void act("Deposit", async () => {
             await ensureAllowance(signer, a);
@@ -60,37 +60,36 @@ export default function Underwrite() {
   return (
     <section className="market">
       <aside className="rail">
-        <p className="meta">Provide liquidity · underwriting</p>
+        <p className="meta">Provide liquidity</p>
         <p className="lede">
-          Liquidity providers supply the money that pays protection claims. In return, they earn a share of the premiums paid by customers.
-          They also bear the risk of losses when claims are paid. Every cover is fully collateralized, so the pool can never owe more than it holds.
+          Other people pay a fee to protect their stocks. You put in money that pays them if their stock drops. In return, you earn a share of those fees.
+          If a payout happens, your share of that cost comes out of your money, so you can lose part of what you put in.
         </p>
         <p className="meta">
-          You deposit USDC and receive pool shares, which are accounting entries, not a new token. Your shares track your slice of the pool.
-          The share price rises as premiums arrive and falls when claims are paid.
+          You are not buying a new coin. You add USDC and get shares that track your slice of the pool. A share is worth more as fees arrive and less when payouts are made.
         </p>
         <p className="meta rail__foot">
-          Deposits and withdrawals are closed while any cover is outstanding, so nobody joins late for the premium or leaves early to dodge a loss.
+          You cannot add or take out money while stock protection is active. This stops people joining at the last minute for the fees, or leaving early to avoid a loss.
         </p>
       </aside>
       <div className="stage">
-        <p className="meta">{snap?.locked ? "Pool locked until the session settles" : "Open for deposits and withdrawals"}</p>
+        <p className="meta">{snap?.locked ? "Locked until the current round ends" : "Open: you can add or take out money"}</p>
         <h1 className="display display--md">
-          <span className="display__row">Earn the</span>
-          <span className="display__row display__row--outline">premium.</span>
+          <span className="display__row">Earn from</span>
+          <span className="display__row display__row--outline">the fees.</span>
         </h1>
 
         <dl className="rows">
-          <div><dt>Pool assets</dt><dd>{snap ? fmtUsd(snap.totalAssets) : "…"} USDC</dd></div>
-          <div><dt>Reserved for payouts</dt><dd>{util.toFixed(2)}%</dd></div>
-          <div><dt>Share price</dt><dd>{snap ? (Number(snap.sharePrice) / 1e18).toFixed(6) : "…"}</dd></div>
-          <div><dt>Return since start</dt><dd>{yieldPct >= 0 ? "+" : ""}{yieldPct.toFixed(4)}%</dd></div>
-          <div><dt>Your position</dt><dd>{me ? fmtUsd(me.shareValue) : "Connect to see"} USDC</dd></div>
+          <div><dt>Total money in the pool</dt><dd>{snap ? fmtUsd(snap.totalAssets) : "…"} USDC</dd></div>
+          <div><dt>Set aside for possible payouts</dt><dd>{util.toFixed(2)}%</dd></div>
+          <div><dt>Value of one share</dt><dd>{snap ? (Number(snap.sharePrice) / 1e18).toFixed(6) : "…"}</dd></div>
+          <div><dt>Gain or loss since start</dt><dd>{yieldPct >= 0 ? "+" : ""}{yieldPct.toFixed(4)}%</dd></div>
+          <div><dt>Your money in the pool</dt><dd>{me ? fmtUsd(me.shareValue) : "Connect to see"} USDC</dd></div>
         </dl>
 
         <div className="flow">
           <div className="flow__step">
-            <p className="meta">Amount, mUSDC{me ? ` · you hold ${fmtUsd(me.usdc)}` : ""}</p>
+            <p className="meta">Amount to add, in test dollars (mUSDC){me ? ` · you hold ${fmtUsd(me.usdc)}` : ""}</p>
             <label className="field-in">
               <input aria-label="Amount to deposit" value={amount} inputMode="decimal" onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} />
             </label>
@@ -103,7 +102,7 @@ export default function Underwrite() {
             {signer && !wrongNetwork && me && me.shares > 0n && (
               <MagneticButton
                 small
-                label="Withdraw all"
+                label="Take out all"
                 disabled={busy || !!snap?.locked}
                 onClick={() => void act("Withdrawal", async () => { await send(signer, need("pool"), POOL_ABI, "withdraw", [me.shares, signer.address]); })}
               />
@@ -115,9 +114,9 @@ export default function Underwrite() {
           {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
         </div>
         <div className="meta field__legal">
-          <p><b>What you are accepting:</b> you can lose part or all of your deposit if covers are paid out. A sharp gap on one stock can cost the pool up to the sum of the maximum payouts reserved for that session.</p>
-          <p>Your funds are locked while any cover is outstanding, so you cannot withdraw before a session settles. There is also smart contract risk, and the product is unaudited.</p>
-          <p><b>Real or simulated:</b> this pool is seeded with mock USDC from the deployer wallet. It is not independent underwriting capital, and no real money is at stake. Not an offer or advice.</p>
+          <p><b>The risk:</b> you can lose some or all of the money you add. If a stock drops a lot, the pool pays the people who bought protection, and that cost is shared by everyone in the pool, including you.</p>
+          <p>Your money is stuck while protection is active, so you cannot take it out early.</p>
+          <p><b>This is a test:</b> the pool was filled with play money by the developer, not by real investors. Nothing here is real money or real insurance. Not financial advice.</p>
         </div>
       </div>
     </section>

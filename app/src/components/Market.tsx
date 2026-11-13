@@ -110,13 +110,13 @@ export default function Market() {
   if (!signer) cta = { label: "Connect wallet", onClick: () => setWalletOpen(true) };
   else if (wrongNetwork) cta = { label: `Switch to ${CHAIN.name}`, onClick: () => void switchNetwork() };
   else if (!snap || !view || !me) cta = { label: "Loading", disabled: true };
-  else if (!sale) cta = { label: "No cover on sale", disabled: true, note: "Cover is sold while the market is open, before each close. Next session will show here." };
+  else if (!sale) cta = { label: "Protection not available right now", disabled: true, note: "You can only buy protection while the market is open, before it closes. The next chance will appear here." };
   else if (view.raw === 0n) cta = { label: "Enter an amount", disabled: true };
   else if (view.raw > me.tokens) cta = { label: `Not enough ${TICKER}`, disabled: true, note: `You hold ${fmtTokens(me.tokens)} ${TICKER}.` };
-  else if (view.premium > me.usdc) cta = { label: "Not enough mUSDC", disabled: true, note: `The premium is ${fmtUsd(view.premium)} mUSDC.` };
-  else if (view.notional < 10_000_000n) cta = { label: "Minimum cover is 10 USDC", disabled: true };
+  else if (view.premium > me.usdc) cta = { label: "Not enough test dollars", disabled: true, note: `The fee is ${fmtUsd(view.premium)} test dollars.` };
+  else if (view.notional < 10_000_000n) cta = { label: "Smallest amount you can protect is 10 USD", disabled: true };
   else if (busy) cta = { label: step === "approve" ? "Approve in wallet…" : "Confirm in wallet…", disabled: true };
-  else cta = { label: `Buy cover · ${fmtUsd(view.premium)} USDC`, onClick: () => void buy() };
+  else cta = { label: `Protect my stock · fee ${fmtUsd(view.premium)} USDC`, onClick: () => void buy() };
 
   const lowFunds = !!me && (me.usdc < 100n * 10n ** 6n || me.tokens < DEMO_TOKENS);
   const txUrl = done && CHAIN.blockExplorers ? `${CHAIN.blockExplorers.default.url}/tx/${done}` : null;
@@ -124,24 +124,24 @@ export default function Market() {
   return (
     <section className="market">
       <aside className="rail">
-        <p className="meta">{TICKER} · mock stock token</p>
+        <p className="meta">{TICKER} · practice stock, not real</p>
         <div>
           <p className="big">{snap ? fmtPx(snap.feedPrice) : "…"}</p>
-          <p className="meta">Last feed price, USD{snap ? ` · updated ${when(snap.feedUpdatedAt)}` : ""}</p>
+          <p className="meta">Last price, USD{snap ? ` · updated ${when(snap.feedUpdatedAt)}` : ""}</p>
           <dl className="rows">
             <div><dt>Market</dt><dd>{view?.phase.label ?? "…"}</dd></div>
             {left !== null && <div><dt>{view?.phase.phase === "sale" ? "Closes in" : "Opens in"}</dt><dd>{left}s</dd></div>}
             {snap?.session && <div><dt>Close / open</dt><dd>{when(snap.session.closeTime)} / {when(snap.session.openTime)}</dd></div>}
-            <div><dt>Pool capacity</dt><dd>{snap ? fmtUsd(snap.totalAssets, 0) : "…"}</dd></div>
+            <div><dt>Money available for payouts</dt><dd>{snap ? fmtUsd(snap.totalAssets, 0) : "…"}</dd></div>
           </dl>
         </div>
         <div className="rail__foot">
-          <p className="meta">Cover terms</p>
+          <p className="meta">The three options</p>
           <ol className="terms">
             {snap?.tiers.map((t) => (
               <li key={t.name}>
                 <span>{t.name}</span>
-                <span className="meta">{t.deductibleBps / 100}% deductible · {t.capBps / 100}% cap · {t.premiumBps / 100}% premium</span>
+                <span className="meta">you absorb the first {t.deductibleBps / 100}% · we pay up to {t.capBps / 100}% · fee {t.premiumBps / 100}%</span>
               </li>
             ))}
           </ol>
@@ -149,23 +149,24 @@ export default function Market() {
       </aside>
 
       <div className="stage">
-        <p className="meta">Programmable stock markets · parametric cover</p>
+        <p className="meta">Overnight protection for your stocks</p>
         <h1 className="display display--md">
           <span className="display__row">Protect your stocks against</span>
           <span className="display__row display__row--outline">overnight drops.</span>
         </h1>
         <p className="lede lede--wide">
-          GapCover helps protect tokenized stock positions against big price drops between market close and the next market opening.
-          Choose a stock, pick your protection level and pay a premium. If the stock opens below the agreed threshold, you can receive a payout.
-          If no reliable opening price is available, nothing settles and your premium is refunded.
+          The market closes. News comes out. The next morning your stock opens much lower, and you never had a chance to sell.
+          GapCover pays you part of that loss. Pick how much stock to protect, pay a small fee now, and if the stock opens lower
+          than the level you chose, you are paid automatically. If there is no reliable opening price, nothing is paid and you get your fee back.
         </p>
+        <p className="meta">1. Pick how much stock to protect. 2. Pay a small fee. 3. If it opens lower, you are paid automatically.</p>
         <details className="lede lede--wide">
-          <summary className="meta">What is covered, what is not, and where the price comes from</summary>
-          <p className="meta"><b>Covered:</b> a fall in the stock&apos;s price between the last price before the close and the first fresh price after the open, beyond your deductible, up to your cap.</p>
-          <p className="meta"><b>Not covered:</b> price moves during trading hours, drops that recover before the open, losses from a stock split or other corporate action (the session is cancelled and premiums refunded), hacks, and anything below your deductible.</p>
-          <p className="meta"><b>How a payout is calculated:</b> you are paid for the part of the drop beyond your deductible, up to your cap, multiplied by the value you covered. Example: 6% drop, 2% deductible, 10% cap pays 4% of your covered value.</p>
-          <p className="meta"><b>Where the price comes from:</b> on this testnet, a mock price feed that anyone can move. It is not a real market price. A live version would settle only on the first fresh price a trusted equity feed publishes after the open.</p>
-          <p className="meta"><b>Real or simulated:</b> everything here is simulated. Mock tokens, mock prices, no real money, no real insurance.</p>
+          <summary className="meta">The details, in plain words</summary>
+          <p className="meta"><b>What we pay for:</b> the stock opens lower than where it closed, by more than the first part of the loss that you absorb yourself.</p>
+          <p className="meta"><b>What we do not pay for:</b> drops while the market is open, drops that bounce back before the open, share splits and similar company events (you get your fee back), and the first part of any loss that you absorb.</p>
+          <p className="meta"><b>Example:</b> You protect $10,000 of stock with Standard. It opens 6% lower, a $600 loss. You absorb the first 2% ($200). We pay the next 4%: $400. You paid a $60 fee. Without protection you are down $600. With it, you are down $260.</p>
+          <p className="meta"><b>Where the price comes from:</b> on this test version, a made-up price that anyone can change. A real version would use a trusted market price.</p>
+          <p className="meta"><b>Is this real?</b> No. Practice stock, play money, no real insurance.</p>
         </details>
 
         <div className="flow">
@@ -194,7 +195,7 @@ export default function Market() {
                 <li key={t.name}>
                   <button className={i === tierIdx ? "on" : ""} onClick={() => setTierIdx(i)} aria-pressed={i === tierIdx}>
                     <span>{t.name}</span>
-                    <span className="meta">pays after {t.deductibleBps / 100}% · up to {t.capBps / 100}% · costs {t.premiumBps / 100}%</span>
+                    <span className="meta">you absorb the first {t.deductibleBps / 100}% · we pay up to {t.capBps / 100}% · fee {t.premiumBps / 100}%</span>
                   </button>
                 </li>
               ))}
@@ -206,14 +207,14 @@ export default function Market() {
             {view && (
               <>
                 <dl className="rows">
-                  <div><dt>Value covered</dt><dd>{fmtUsd(view.notional)} USDC</dd></div>
-                  <div><dt>You pay now</dt><dd>{fmtUsd(view.premium)} USDC</dd></div>
-                  <div><dt>Most you can receive</dt><dd>{fmtUsd(view.maxPayout)} USDC</dd></div>
+                  <div><dt>Stock value protected</dt><dd>{fmtUsd(view.notional)} USDC</dd></div>
+                  <div><dt>Fee you pay today</dt><dd>{fmtUsd(view.premium)} USDC</dd></div>
+                  <div><dt>Most we can pay you</dt><dd>{fmtUsd(view.maxPayout)} USDC</dd></div>
                 </dl>
                 <table className="scen">
-                  <caption className="meta">If the first price after the open is…</caption>
+                  <caption className="meta">What would happen if the stock opens lower</caption>
                   <thead>
-                    <tr><th className="meta">Lower by</th><th className="meta">Your tokens lose</th><th className="meta">Cover pays</th></tr>
+                    <tr><th className="meta">Opens lower by</th><th className="meta">Your shares lose</th><th className="meta">GapCover pays you</th></tr>
                   </thead>
                   <tbody>
                     {GAPS.map((g) => {
@@ -243,32 +244,32 @@ export default function Market() {
             </p>
           )}
           {!sale && snap && !snap.session && (
-            <p className="meta">Sessions are opened by the keeper. On this testnet anyone can open one from the <a className="linkbtn" href="/demo">Demo page</a>.</p>
+            <p className="meta">Protection rounds are opened by an operator. On this test version, anyone can open one from the <a className="linkbtn" href="/demo">Demo page</a>.</p>
           )}
           {done && (
             <p className="meta ok">
-              Cover bought. {txUrl ? <a className="linkbtn" href={txUrl} target="_blank" rel="noreferrer">View transaction</a> : null}
+              Protection bought. {txUrl ? <a className="linkbtn" href={txUrl} target="_blank" rel="noreferrer">View transaction</a> : null}
             </p>
           )}
           {err && <p className="meta warn">{err}</p>}
         </div>
 
         <div className="mine" id="covers">
-          <h2 className="h2">My covers</h2>
-          {!signer && <p className="meta">Connect a wallet to see your covers.</p>}
-          {signer && covers && covers.length === 0 && <p className="meta">No covers yet. Buy one above.</p>}
+          <h2 className="h2">My protection</h2>
+          {!signer && <p className="meta">Connect a wallet to see your protection.</p>}
+          {signer && covers && covers.length === 0 && <p className="meta">You have no protection yet. Buy some above.</p>}
           {signer && !covers && <p className="meta">Loading…</p>}
           <ul className="covers">
             {covers?.map((c) => (
               <li key={`${c.sessionId}-${c.coverId}`}>
                 <div>
-                  <p className="covers__t">Session {c.sessionId.toString()} · {snap?.tiers[c.tier]?.name}</p>
+                  <p className="covers__t">Round {c.sessionId.toString()} · {snap?.tiers[c.tier]?.name}</p>
                   <p className="meta">{STATE_TEXT[c.state]}</p>
                 </div>
                 <dl className="covers__n">
-                  <div><dt className="meta">Covered</dt><dd>{fmtUsd(c.notional)}</dd></div>
-                  <div><dt className="meta">Premium</dt><dd>{fmtUsd(c.premium)}</dd></div>
-                  <div><dt className="meta">{c.state === "paid" || c.state === "nopayout" ? "Paid" : c.state === "refunded" ? "Refund" : "Max payout"}</dt>
+                  <div><dt className="meta">Protected</dt><dd>{fmtUsd(c.notional)}</dd></div>
+                  <div><dt className="meta">Fee</dt><dd>{fmtUsd(c.premium)}</dd></div>
+                  <div><dt className="meta">{c.state === "paid" || c.state === "nopayout" ? "Paid" : c.state === "refunded" ? "Refund" : "Most we pay"}</dt>
                     <dd>{c.state === "paid" || c.state === "nopayout" ? fmtUsd(c.payout) : c.state === "refunded" ? fmtUsd(c.premium) : fmtUsd(c.maxPayout)}</dd></div>
                 </dl>
               </li>
