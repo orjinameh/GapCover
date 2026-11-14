@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { DEMO, need } from "@/lib/config";
+import { DEMO_MANUAL, need } from "@/lib/config";
 import { FEED_ABI, KEEPER_ABI, POOL_ABI, SPOT_ABI } from "@/lib/abis";
 import { STATUS, phaseOf, pub, send } from "@/lib/chain";
 import { useApp } from "./state";
@@ -42,7 +42,7 @@ export default function SessionControls() {
     <div className="controls">
       <p className="meta">By hand · {phase.label}</p>
       <div className="btnrow btnrow--tight">
-        <MagneticButton small label="Start a night" disabled={!canOpen} onClick={() => void act("Start a night", async () => { if (signer) await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO.closeIn, DEMO.openIn]); })} />
+        <MagneticButton small label="Start a night" disabled={!canOpen} onClick={() => void act("Start a night", async () => { if (signer) await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO_MANUAL.closeIn, DEMO_MANUAL.openIn]); })} />
         <MagneticButton small label="Close the market" disabled={!canClose} onClick={() => void act("Close the market", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "closeSession", [snap.activeId]); })} />
         <label className="gapin">
           <span className="meta">Drop %</span>
@@ -66,7 +66,7 @@ export default function SessionControls() {
         />
         <MagneticButton small label="Cancel the night" disabled={!canVoid} onClick={() => void act("Cancel the night", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "voidSession", [snap.activeId]); })} />
       </div>
-      <p className="meta">There is no live market in this practice version, so these buttons play the market. One night lasts about 80 seconds.</p>
+      <p className="meta">There is no live market in this practice version, so these buttons play the market. By hand, a night lasts 3 minutes: buy in the first 2, press Close the market within 30 seconds after that, then open it a minute later.</p>
       {!signer && <p className="meta warn">Connect first.</p>}
       {msg && <p className="meta">{msg}</p>}
     </div>

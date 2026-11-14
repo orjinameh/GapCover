@@ -29,6 +29,8 @@ export const DEPLOYED = Object.values(ADDR).every(Boolean);
 
 /** Compressed demo timings, seconds. Must satisfy the pool's lockWindow set in script/Deploy.s.sol. */
 export const DEMO = { closeIn: 40, openIn: 80 };
+/** Slower night for pressing the buttons by hand. Sale stays open for 2 minutes. */
+export const DEMO_MANUAL = { closeIn: 120, openIn: 180 };
 export const TICKER = "NVDAm";
 export const START_PRICE = 100n * 10n ** 8n; // $100, 8 decimals
 export const DEMO_TOKENS = 100n * 10n ** 18n; // 100 tokens = 10,000 USDC notional at $100
