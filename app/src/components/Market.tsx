@@ -79,7 +79,7 @@ export default function Market() {
       await fn();
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);
-      setErr(/User rejected|denied/i.test(m) ? "Cancelled." : m.split("\n")[0]);
+      setErr(/User rejected|denied/i.test(m) ? "Cancelled." : /missing or invalid|insufficient funds|exceeds the balance/i.test(m) ? "This account has no network fee money. Open Your account, copy the address and get free test ETH for Base Sepolia." : m.split("\n")[0]);
     } finally {
       setBusy(false);
       setStep(null);

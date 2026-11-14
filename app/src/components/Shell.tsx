@@ -37,6 +37,9 @@ function WalletSheet() {
                 <div><dt>Stocks</dt><dd>{fmtTokens(me.tokens)}</dd></div>
               </dl>
             )}
+            {me && me.eth === 0n && (
+              <p className="meta warn">This account has no network fee money, so it can't send anything yet. Copy the address above and get free test ETH for Base Sepolia from a faucet. Then try again.</p>
+            )}
             {signer.kind === "browser" && wrongNetwork && (
               <button className="sheet__btn" onClick={() => void switchNetwork()}>Switch network</button>
             )}
@@ -53,7 +56,12 @@ function WalletSheet() {
               <span>Use a practice account</span>
               <span className="meta">Nothing to install. Play money only</span>
             </button>
-            <p className="meta">On a phone, open this page inside the MetaMask app to use your own account.</p>
+            {!hasInjected && (
+              <a className="sheet__btn" href={`https://metamask.app.link/dapp/${typeof window !== "undefined" ? window.location.host + window.location.pathname : ""}`}>
+                <span>Open in the MetaMask app</span>
+                <span className="meta">On a phone</span>
+              </a>
+            )}
             {err && <p className="meta warn">{err}</p>}
           </>
         )}
