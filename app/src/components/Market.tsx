@@ -148,6 +148,7 @@ export default function Market() {
         <Explainer tier={view?.tier} tierName={view?.tier.name} />
         <details className="lede lede--wide">
           <summary className="meta">Questions</summary>
+          <p className="meta"><b>When can I buy?</b> Before the market closes, with a short cut-off just before. Once it is closed, it is too late. News that comes out after that is not covered.</p>
           <p className="meta"><b>Is it for me?</b> Only if a surprise drop overnight would really hurt, like holding through earnings. It is not a way to make money.</p>
           <p className="meta"><b>What if the stock goes up?</b> You lose only the fee and keep the gain.</p>
           <p className="meta"><b>How long does it last?</b> One night. A weekend counts as one night. Buy again to stay protected.</p>

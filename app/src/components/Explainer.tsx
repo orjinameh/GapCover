@@ -224,11 +224,11 @@ function PinnedStory({ drop, ded, cap, fee, nvda }: { drop: number; ded: number;
           <p className="gs__kick">{nvda ? "Real case · Nvidia · 9 Nov 2026" : `Example · ${money(STOCKS)} of stocks`}</p>
           <div className="gs__caps">
             <h2 className={`gs__h ${i === 0 ? "on" : ""}`}>
-              <small>Friday · market closes</small>
-              Your stocks are worth {money(STOCKS)}.
+              <small>Friday · last chance to buy</small>
+              You buy protection before the close.
             </h2>
             <h2 className={`gs__h ${i === 1 ? "on" : ""}`}>
-              <small>Sunday · market shut</small>
+              <small>Sunday · too late to buy</small>
               {nvda ? "Bad news about the CEO." : "Bad news."} You can&apos;t sell.
             </h2>
             <h2 className={`gs__h ${i === 2 ? "on" : ""}`}>
