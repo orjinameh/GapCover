@@ -85,7 +85,7 @@ export default function Simulator() {
   return (
     <section id="simulator" className="sim">
       <aside className="rail">
-        <p className="meta">Index<br />02 / Weekend simulator</p>
+        <p className="meta">Demo<br />One weekend, played fast</p>
 
         <div>
           <ol className="rail__list">
@@ -101,10 +101,10 @@ export default function Simulator() {
           </ol>
 
           <div className="ctl">
-            <p className="meta">Gap at the open</p>
+            <p className="meta">How far it drops</p>
             <div className="ctl__row">
               <input
-                aria-label="Gap percent"
+                aria-label="Drop in percent"
                 type="range"
                 min={1}
                 max={20}
@@ -114,7 +114,7 @@ export default function Simulator() {
               />
               <span className="ctl__val">−{gap}%</span>
             </div>
-            <p className="meta">Tier</p>
+            <p className="meta">Protection level</p>
             <div className="seg">
               {tiers.map((t, i) => (
                 <button key={t.name} className={i === tierIdx ? "on" : ""} disabled={running} onClick={() => setTierIdx(i)}>
@@ -123,60 +123,60 @@ export default function Simulator() {
               ))}
             </div>
             <p className="meta ctl__terms">
-              Deductible {tier.deductibleBps / 100}% · cap {tier.capBps / 100}% · premium {tier.premiumBps / 100}%
+              Fee {tier.premiumBps / 100}% · you take the first {tier.deductibleBps / 100}% · we pay up to {tier.capBps / 100}%
             </p>
           </div>
         </div>
 
         <div className="rail__foot">
           <p className="meta">
-            Demo wallet (throwaway, testnet)<br />
+            Practice account (temporary)<br />
             {demo ? short(demo.address) : "…"}
-            {demoEth !== null ? ` · ${(Number(demoEth) / 1e18).toFixed(4)} ETH` : ""}
+            {demoEth !== null ? ` · ${(Number(demoEth) / 1e18).toFixed(4)} fee money` : ""}
           </p>
           {lowGas && demo && (
-            <p className="meta warn">Send Base Sepolia ETH from a faucet to {demo.address} to pay gas.</p>
+            <p className="meta warn">This account needs a little network fee money. Get free test ETH from a Base Sepolia faucet and send it to {demo.address}.</p>
           )}
-          {!DEPLOYED && <p className="meta warn">Contracts not configured. See README, deploy then write-env.</p>}
+          {!DEPLOYED && <p className="meta warn">Not set up yet. See the README.</p>}
         </div>
       </aside>
 
       <div className="stage">
         <div className="stage__head">
           <p className="meta">
-            {TICKER} · {DEMO_TOKENS / 10n ** 18n} tokens · notional {fmtUsd(notional, 0)} USDC · ref {fmtPx(START_PRICE)} → open {fmtPx(settle)}
+            {TICKER} · {DEMO_TOKENS / 10n ** 18n} stocks · ${fmtUsd(notional, 0)} · ${fmtPx(START_PRICE)} → ${fmtPx(settle)}
           </p>
-          <MagneticButton label={running ? "Running…" : result ? "Run again" : "Run the weekend"} onClick={run} disabled={!ready} />
+          <MagneticButton label={running ? "Playing…" : result ? "Play again" : "Play the weekend"} onClick={run} disabled={!ready} />
         </div>
 
         <div className={`duo ${result ? "duo--done" : ""}`}>
           <article className="side side--covered">
-            <p className="meta">Covered wallet {cov ? `· ${short(cov.address)}` : ""}</p>
+            <p className="meta">Protected account {cov ? `· ${short(cov.address)}` : ""}</p>
             <h3 className="net">{fmtSigned(coveredNet)}</h3>
-            <p className="meta">Net, USDC {result ? "" : "· preview"}</p>
+            <p className="meta">You end up {result ? "" : "· preview"}</p>
             <dl className="rows">
-              <div><dt>Position move</dt><dd>{fmtSigned(move)}</dd></div>
-              <div><dt>Premium paid</dt><dd>{fmtSigned(-(cov?.premium ?? premium))}</dd></div>
-              <div><dt>Payout, same tx</dt><dd>{fmtSigned(cov ? cov.payout : expected)}</dd></div>
+              <div><dt>Your stocks</dt><dd>{fmtSigned(move)}</dd></div>
+              <div><dt>Fee</dt><dd>{fmtSigned(-(cov?.premium ?? premium))}</dd></div>
+              <div><dt>We pay you</dt><dd>{fmtSigned(cov ? cov.payout : expected)}</dd></div>
             </dl>
           </article>
 
           <article className="side side--un">
-            <p className="meta">Uncovered wallet {unc ? `· ${short(unc.address)}` : ""}</p>
+            <p className="meta">Unprotected account {unc ? `· ${short(unc.address)}` : ""}</p>
             <h3 className="net net--outline">{fmtSigned(uncoveredNet)}</h3>
-            <p className="meta">Net, USDC {result ? "" : "· preview"}</p>
+            <p className="meta">You end up {result ? "" : "· preview"}</p>
             <dl className="rows">
-              <div><dt>Position move</dt><dd>{fmtSigned(move)}</dd></div>
-              <div><dt>Premium paid</dt><dd>0.00</dd></div>
-              <div><dt>Payout</dt><dd>0.00</dd></div>
+              <div><dt>Your stocks</dt><dd>{fmtSigned(move)}</dd></div>
+              <div><dt>Fee</dt><dd>0.00</dd></div>
+              <div><dt>We pay you</dt><dd>0.00</dd></div>
             </dl>
           </article>
         </div>
 
         {result && (
           <p className="meta verdict">
-            On-chain payout {fmtUsd(result.covered.payout)} USDC · expected {fmtUsd(result.expectedPayout)} ·{" "}
-            {result.covered.payout === result.expectedPayout ? "match" : "MISMATCH"} · saved {fmtUsd(result.covered.net - result.uncovered.net)} USDC vs uncovered
+            Paid ${fmtUsd(result.covered.payout)} · expected ${fmtUsd(result.expectedPayout)} ·{" "}
+            {result.covered.payout === result.expectedPayout ? "matches" : "DOES NOT MATCH"} · protection saved ${fmtUsd(result.covered.net - result.uncovered.net)}
           </p>
         )}
         {err && <p className="meta warn">{err}</p>}

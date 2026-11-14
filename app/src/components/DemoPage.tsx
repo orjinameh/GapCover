@@ -12,7 +12,7 @@ export default function DemoPage() {
   }, [signer, useDemo]);
   return (
     <>
-      <div className="demo-note meta">Judge demo · compressed testnet session, mock feed and mock exchange. Not how production would run.</div>
+      <div className="demo-note meta">Demo · a whole weekend in about 80 seconds, with a made-up price. A real version would run on real market hours.</div>
       <Simulator />
       <section className="market market--thin">
         <aside className="rail"><p className="meta">By hand</p></aside>

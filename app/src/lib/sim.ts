@@ -6,13 +6,13 @@ import { STATUS, chainTime, ensureAllowance, pub, send, waitForChainTime, type S
 import { notionalOf, payoutOf, type Tier } from "./math";
 
 export const STEPS = [
-  "Fund the demo wallets",
-  "Friday print, open the session",
-  "Buy cover before the close",
-  "Close: the feed freezes",
-  "The weekend: spot falls",
-  "Open: first fresh print",
-  "Settle: atomic payout",
+  "Give both accounts practice money",
+  "Friday: protection goes on sale",
+  "One account buys protection",
+  "Market closes. The price freezes",
+  "The weekend: the price falls",
+  "Monday: market opens at the new price",
+  "We pay out automatically",
 ] as const;
 
 export type StepState = "wait" | "run" | "done" | "fail";

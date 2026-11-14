@@ -41,9 +41,9 @@ Reviewed against the real-launch development brief (Nov 2026). Based on reading 
 
 ## Underwrite dashboard gaps against section 5
 
-Present: pool assets, reserved share, share price, return since start, own position, deposit, withdraw all.
+Present: pool assets, reserved share, return since start, own position, deposit, withdraw all, and (added in Phase 1) a night-by-night history showing fees earned, paid out and the result, read directly from the contract.
 
-Missing: premiums earned, claims paid, history of pool performance (needs event indexing from `CoverBought`, `SessionSettled`, `Payout`, `SessionVoided`), partial withdrawal, and available versus reserved capital in dollars.
+Still missing: partial withdrawal, per-provider earnings (needs deposit and withdrawal events, so a log index or subgraph), and available versus reserved capital in dollars.
 
 ## Underwriter partners
 

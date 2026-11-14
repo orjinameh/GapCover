@@ -5,6 +5,7 @@ export const POOL_ABI = parseAbi([
   "function sharePrice() view returns (uint256)",
   "function locked() view returns (bool)",
   "function activeSession() view returns (uint256)",
+  "function sessionCount() view returns (uint256)",
   "function shares(address) view returns (uint256)",
   "function totalShares() view returns (uint256)",
   "function convertToAssets(uint256) view returns (uint256)",

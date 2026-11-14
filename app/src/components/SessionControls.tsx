@@ -39,20 +39,20 @@ export default function SessionControls() {
 
   return (
     <div className="controls">
-      <p className="meta">Manual session controls · {phase.label}</p>
+      <p className="meta">By hand · {phase.label}</p>
       <div className="btnrow btnrow--tight">
-        <MagneticButton small label="Open session" disabled={!canOpen} onClick={() => void act("Open session", async () => { if (signer) await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO.closeIn, DEMO.openIn]); })} />
-        <MagneticButton small label="Close session" disabled={!canClose} onClick={() => void act("Close session", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "closeSession", [snap.activeId]); })} />
+        <MagneticButton small label="Start a night" disabled={!canOpen} onClick={() => void act("Start a night", async () => { if (signer) await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO.closeIn, DEMO.openIn]); })} />
+        <MagneticButton small label="Close the market" disabled={!canClose} onClick={() => void act("Close the market", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "closeSession", [snap.activeId]); })} />
         <label className="gapin">
-          <span className="meta">Gap %</span>
+          <span className="meta">Drop %</span>
           <input value={gapPct} inputMode="decimal" onChange={(e) => setGapPct(e.target.value)} />
         </label>
         <MagneticButton
           small
-          label="Print open and settle"
+          label="Open at new price and pay"
           disabled={!canSettle}
           onClick={() =>
-            void act("Settle", async () => {
+            void act("Pay out", async () => {
               if (!signer || !sess) return;
               const g = BigInt(Math.round(Math.max(0, Math.min(Number(gapPct) || 0, 90)) * 100));
               const price = (sess.refPrice * (10_000n - g)) / 10_000n;
@@ -63,10 +63,10 @@ export default function SessionControls() {
             })
           }
         />
-        <MagneticButton small label="Void session" disabled={!canVoid} onClick={() => void act("Void session", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "voidSession", [snap.activeId]); })} />
+        <MagneticButton small label="Cancel the night" disabled={!canVoid} onClick={() => void act("Cancel the night", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "voidSession", [snap.activeId]); })} />
       </div>
-      <p className="meta">The Cover page runs on real sessions. On this testnet there is no live exchange, so these buttons play the keeper and the price feed. A session lasts about 80 seconds.</p>
-      {!signer && <p className="meta warn">Connect a wallet first.</p>}
+      <p className="meta">There is no live market in this practice version, so these buttons play the market. One night lasts about 80 seconds.</p>
+      {!signer && <p className="meta warn">Connect first.</p>}
       {msg && <p className="meta">{msg}</p>}
     </div>
   );

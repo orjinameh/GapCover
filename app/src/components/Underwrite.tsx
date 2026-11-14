@@ -7,6 +7,7 @@ import { fmtUsd, parseUsd } from "@/lib/math";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
 import PoolFlow from "./PoolFlow";
+import PoolHistory from "./PoolHistory";
 
 export default function Underwrite() {
   const { snap, signer, setWalletOpen, wrongNetwork, switchNetwork, refresh } = useApp();
@@ -81,6 +82,8 @@ export default function Underwrite() {
           <div><dt>Earned so far</dt><dd>{yieldPct >= 0 ? "+" : ""}{yieldPct.toFixed(2)}%</dd></div>
           <div><dt>Your money</dt><dd>{me ? `$${fmtUsd(me.shareValue)}` : "Connect to see"}</dd></div>
         </dl>
+
+        <PoolHistory tiers={snap?.tiers} refreshKey={`${snap?.activeId ?? 0}-${snap?.session?.status ?? 0}`} />
 
         <div className="flow">
           <div className="flow__step">

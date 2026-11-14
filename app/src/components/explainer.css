@@ -146,3 +146,16 @@
   .pf-drop, .pf-out, .pf-ripple { display: none; }
   .pf-level { transform: translateY(24px); }
 }
+
+/* ================= pool history (liquidity page) ================= */
+.hx { max-width: 46rem; }
+.hx-bars { display: flex; gap: 6px; height: 6rem; margin: 1.2rem 0 1.6rem; border-top: 1px solid rgba(245, 245, 247, 0.12); border-bottom: 1px solid rgba(245, 245, 247, 0.12); background: linear-gradient(rgba(245, 245, 247, 0.3), rgba(245, 245, 247, 0.3)) center / 100% 1px no-repeat; }
+.hx-col { position: relative; flex: 1; max-width: 2.4rem; }
+.hx-bar { position: absolute; left: 0; right: 0; }
+.hx-bar--gain { background: var(--acc); }
+.hx-bar--loss { background: rgba(245, 245, 247, 0.55); }
+.hx-bar--wait { background: transparent; border: 1px dashed rgba(245, 245, 247, 0.5); }
+.hx-list { list-style: none; border-top: 1px solid rgba(245, 245, 247, 0.28); }
+.hx-list li { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid rgba(245, 245, 247, 0.28); font-size: 1.15rem; letter-spacing: -0.02em; }
+.hx-list small { display: block; margin-top: 0.2rem; }
+.hx-val { text-align: right; font-variant-numeric: tabular-nums; }
