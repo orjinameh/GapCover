@@ -69,10 +69,10 @@ export async function readMyCovers(me: Address, tiers: Tier[], now: bigint, limi
 }
 
 export const STATE_TEXT: Record<CoverState, string> = {
-  active: "Active. Market open",
-  frozen: "Market closed, feed frozen",
-  awaiting: "Open, awaiting first price",
-  paid: "Paid out",
-  nopayout: "Settled, gap below your deductible",
-  refunded: "Voided, premium refunded",
+  active: "Protected. Market is open",
+  frozen: "Protected. Market is closed",
+  awaiting: "Market just opened. Checking the price",
+  paid: "You were paid",
+  nopayout: "No payout. The drop was too small",
+  refunded: "Cancelled. Fee refunded",
 };

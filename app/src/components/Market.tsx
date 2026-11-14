@@ -3,14 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CHAIN, DEPLOYED, DEMO_TOKENS, TICKER, need } from "@/lib/config";
 import { POOL_ABI, STOCK_ABI, USDC_ABI } from "@/lib/abis";
 import { ensureAllowance, phaseOf, secondsLeft, send } from "@/lib/chain";
-import { fmtPx, fmtSigned, fmtTokens, fmtUsd, notionalOf, parseTokens, payoutOf, premiumOf } from "@/lib/math";
+import { fmtPx, fmtTokens, fmtUsd, notionalOf, parseTokens, premiumOf } from "@/lib/math";
 import { readMyCovers, STATE_TEXT, type MyCover } from "@/lib/covers";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
 import Explainer from "./Explainer";
 
 const when = (ts: bigint) => new Date(Number(ts) * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-const GAPS = [3, 6, 10, 20];
 
 export default function Market() {
   const { snap, signer, setWalletOpen, wrongNetwork, switchNetwork, refresh } = useApp();
@@ -80,7 +79,7 @@ export default function Market() {
       await fn();
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);
-      setErr(/User rejected|denied/i.test(m) ? "Cancelled in your wallet." : m.split("\n")[0]);
+      setErr(/User rejected|denied/i.test(m) ? "Cancelled." : m.split("\n")[0]);
     } finally {
       setBusy(false);
       setStep(null);
@@ -108,16 +107,16 @@ export default function Market() {
 
   // primary action state
   let cta: { label: string; onClick?: () => void; disabled?: boolean; note?: string } = { label: "…", disabled: true };
-  if (!signer) cta = { label: "Connect wallet", onClick: () => setWalletOpen(true) };
-  else if (wrongNetwork) cta = { label: `Switch to ${CHAIN.name}`, onClick: () => void switchNetwork() };
+  if (!signer) cta = { label: "Connect", onClick: () => setWalletOpen(true) };
+  else if (wrongNetwork) cta = { label: "Switch network", onClick: () => void switchNetwork() };
   else if (!snap || !view || !me) cta = { label: "Loading", disabled: true };
-  else if (!sale) cta = { label: "Protection not available right now", disabled: true, note: "You can only buy protection while the market is open, before it closes. The next chance will appear here." };
+  else if (!sale) cta = { label: "Not on sale right now", disabled: true, note: "You can buy while the market is open." };
   else if (view.raw === 0n) cta = { label: "Enter an amount", disabled: true };
-  else if (view.raw > me.tokens) cta = { label: `Not enough ${TICKER}`, disabled: true, note: `You hold ${fmtTokens(me.tokens)} ${TICKER}.` };
-  else if (view.premium > me.usdc) cta = { label: "Not enough test dollars", disabled: true, note: `The fee is ${fmtUsd(view.premium)} test dollars.` };
-  else if (view.notional < 10_000_000n) cta = { label: "Smallest amount you can protect is 10 USD", disabled: true };
-  else if (busy) cta = { label: step === "approve" ? "Approve in wallet…" : "Confirm in wallet…", disabled: true };
-  else cta = { label: `Protect my stock · fee ${fmtUsd(view.premium)} USDC`, onClick: () => void buy() };
+  else if (view.raw > me.tokens) cta = { label: "Not enough stocks", disabled: true, note: `You have ${fmtTokens(me.tokens)}.` };
+  else if (view.premium > me.usdc) cta = { label: "Not enough test dollars", disabled: true, note: `The fee is $${fmtUsd(view.premium)}.` };
+  else if (view.notional < 10_000_000n) cta = { label: "Minimum is $10", disabled: true };
+  else if (busy) cta = { label: step === "approve" ? "Approve (1 of 2)…" : "Confirm (2 of 2)…", disabled: true };
+  else cta = { label: `Protect · fee $${fmtUsd(view.premium)}`, onClick: () => void buy() };
 
   const lowFunds = !!me && (me.usdc < 100n * 10n ** 6n || me.tokens < DEMO_TOKENS);
   const txUrl = done && CHAIN.blockExplorers ? `${CHAIN.blockExplorers.default.url}/tx/${done}` : null;
@@ -125,67 +124,50 @@ export default function Market() {
   return (
     <section className="market">
       <aside className="rail">
-        <p className="meta">{TICKER} · practice stock, not real</p>
+        <p className="meta">{TICKER} · practice stock</p>
         <div>
           <p className="big">{snap ? fmtPx(snap.feedPrice) : "…"}</p>
-          <p className="meta">Last price, USD{snap ? ` · updated ${when(snap.feedUpdatedAt)}` : ""}</p>
+          <p className="meta">Price now, in $</p>
           <dl className="rows">
             <div><dt>Market</dt><dd>{view?.phase.label ?? "…"}</dd></div>
             {left !== null && <div><dt>{view?.phase.phase === "sale" ? "Closes in" : "Opens in"}</dt><dd>{left}s</dd></div>}
-            {snap?.session && <div><dt>Close / open</dt><dd>{when(snap.session.closeTime)} / {when(snap.session.openTime)}</dd></div>}
-            <div><dt>Money available for payouts</dt><dd>{snap ? fmtUsd(snap.totalAssets, 0) : "…"}</dd></div>
+            <div><dt>Money ready to pay</dt><dd>{snap ? `$${fmtUsd(snap.totalAssets, 0)}` : "…"}</dd></div>
           </dl>
-        </div>
-        <div className="rail__foot">
-          <p className="meta">The three options</p>
-          <ol className="terms">
-            {snap?.tiers.map((t) => (
-              <li key={t.name}>
-                <span>{t.name}</span>
-                <span className="meta">you absorb the first {t.deductibleBps / 100}% · we pay up to {t.capBps / 100}% · fee {t.premiumBps / 100}%</span>
-              </li>
-            ))}
-          </ol>
         </div>
       </aside>
 
       <div className="stage">
-        <p className="meta">Overnight protection for your stocks</p>
+        <p className="meta">Overnight protection</p>
         <h1 className="display display--md">
-          <span className="display__row">Protect your stocks against</span>
-          <span className="display__row display__row--outline">overnight drops.</span>
+          <span className="display__row">Protect your stocks</span>
+          <span className="display__row display__row--outline">overnight.</span>
         </h1>
         <p className="lede lede--wide">
-          The market closes, news hits, the stock opens lower. We pay part of the loss. No drop? You lose only the fee.
+          Pay a small fee. If your stock opens much lower tomorrow, we pay you part of the loss.
         </p>
         <Explainer tier={view?.tier} tierName={view?.tier.name} />
         <details className="lede lede--wide">
-          <summary className="meta">Common questions</summary>
-          <p className="meta"><b>Is this for you?</b> Only if a surprise overnight drop would really hurt, for example holding through earnings. Most nights you will not need it. It is not a way to make money.</p>
-          <p className="meta"><b>What if the stock goes up?</b> You pay the fee and keep the gain. If the gain is smaller than the fee, you end up slightly down.</p>
-          <p className="meta"><b>Does it expire?</b> Yes. It covers one gap, from when you buy until the opening price is checked. It does not renew. A weekend counts as one gap.</p>
-          <p className="meta"><b>Which price counts?</b> The last price before the close against the first fresh price after the open. A drop at the open that recovers later still pays.</p>
-          <p className="meta"><b>What is not covered?</b> Drops during trading hours, the first part you absorb, and company events like splits (those cancel the round and refund your fee).</p>
-          <p className="meta"><b>Do I need to own the stock?</b> Yes, when you buy, and you can protect no more than you hold.</p>
-          <p className="meta"><b>Can I cancel?</b> No. The fee is only refunded if the round is cancelled.</p>
-          <p className="meta"><b>Do I claim my payout?</b> No, it is sent automatically. If a transfer fails, a Claim button appears under My protection.</p>
-          <p className="meta"><b>Where does the price come from?</b> On this test version, a made-up price anyone can change. A real version would use a trusted market price.</p>
-          <p className="meta"><b>Is this real?</b> No. Practice stock, play money, no real insurance.</p>
+          <summary className="meta">Questions</summary>
+          <p className="meta"><b>Is it for me?</b> Only if a surprise drop overnight would really hurt, like holding through earnings. It is not a way to make money.</p>
+          <p className="meta"><b>What if the stock goes up?</b> You lose only the fee and keep the gain.</p>
+          <p className="meta"><b>How long does it last?</b> One night. A weekend counts as one night. Buy again to stay protected.</p>
+          <p className="meta"><b>What is not covered?</b> Drops during the day, and the first part of a drop (you take that). If something unusual happens, like a stock split, we cancel and refund your fee.</p>
+          <p className="meta"><b>Is this real?</b> No. Practice stocks, play money, and a made-up price anyone can change. A real version would use a trusted market price.</p>
         </details>
 
         <div className="flow">
           <div className="flow__step">
-            <p className="meta">01 · How much</p>
+            <p className="meta">1 · How much stock?</p>
             <label className="field-in">
               <input
-                aria-label={`${TICKER} to cover`}
+                aria-label="Stocks to protect"
                 value={tokens}
                 inputMode="decimal"
                 onChange={(e) => setTokens(e.target.value.replace(/[^0-9.]/g, ""))}
               />
             </label>
             <p className="meta">
-              {TICKER} to cover{me ? ` · you hold ${fmtTokens(me.tokens)}` : ""}
+              Stocks to protect{me ? ` · you have ${fmtTokens(me.tokens)}` : ""}
               {me && me.tokens > 0n && (
                 <button className="linkbtn" onClick={() => setTokens(fmtTokens(me.tokens).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, ""))}>Max</button>
               )}
@@ -193,13 +175,13 @@ export default function Market() {
           </div>
 
           <div className="flow__step">
-            <p className="meta">02 · How protected</p>
+            <p className="meta">2 · How safe?</p>
             <ul className="tierlist">
               {snap?.tiers.map((t, i) => (
                 <li key={t.name}>
                   <button className={i === tierIdx ? "on" : ""} onClick={() => setTierIdx(i)} aria-pressed={i === tierIdx}>
                     <span>{t.name}</span>
-                    <span className="meta">you absorb the first {t.deductibleBps / 100}% · we pay up to {t.capBps / 100}% · fee {t.premiumBps / 100}%</span>
+                    <span className="meta">fee {t.premiumBps / 100}% · you take the first {t.deductibleBps / 100}% · we pay up to {t.capBps / 100}%</span>
                   </button>
                 </li>
               ))}
@@ -207,34 +189,13 @@ export default function Market() {
           </div>
 
           <div className="flow__step">
-            <p className="meta">03 · Your quote</p>
+            <p className="meta">3 · The price</p>
             {view && (
-              <>
-                <dl className="rows">
-                  <div><dt>Stock value protected</dt><dd>{fmtUsd(view.notional)} USDC</dd></div>
-                  <div><dt>Fee you pay today</dt><dd>{fmtUsd(view.premium)} USDC</dd></div>
-                  <div><dt>Most we can pay you</dt><dd>{fmtUsd(view.maxPayout)} USDC</dd></div>
-                </dl>
-                <table className="scen">
-                  <caption className="meta">What would happen if the stock opens lower</caption>
-                  <thead>
-                    <tr><th className="meta">Opens lower by</th><th className="meta">Your shares lose</th><th className="meta">GapCover pays you</th></tr>
-                  </thead>
-                  <tbody>
-                    {GAPS.map((g) => {
-                      const settle = (snap!.feedPrice * BigInt(10_000 - g * 100)) / 10_000n;
-                      const pay = payoutOf(view.notional, view.tier, snap!.feedPrice, settle);
-                      return (
-                        <tr key={g}>
-                          <td>{g}%</td>
-                          <td>{fmtSigned(-(view.notional * BigInt(g)) / 100n)}</td>
-                          <td>{fmtSigned(pay)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </>
+              <dl className="rows">
+                <div><dt>Stocks protected</dt><dd>${fmtUsd(view.notional)}</dd></div>
+                <div><dt>Fee</dt><dd>${fmtUsd(view.premium)}</dd></div>
+                <div><dt>Most we pay</dt><dd>${fmtUsd(view.maxPayout)}</dd></div>
+              </dl>
             )}
           </div>
         </div>
@@ -244,15 +205,15 @@ export default function Market() {
           {cta.note && <p className="meta">{cta.note}</p>}
           {lowFunds && signer && !wrongNetwork && (
             <p className="meta">
-              Need test funds? <button className="linkbtn" disabled={busy} onClick={() => void faucet()}>Get 1,000 mUSDC and 100 {TICKER}</button>
+              Need practice money? <button className="linkbtn" disabled={busy} onClick={() => void faucet()}>Get it free</button>
             </p>
           )}
           {!sale && snap && !snap.session && (
-            <p className="meta">Protection rounds are opened by an operator. On this test version, anyone can open one from the <a className="linkbtn" href="/demo">Demo page</a>.</p>
+            <p className="meta">Nothing is on sale yet. Start one on the <a className="linkbtn" href="/demo">Demo page</a>.</p>
           )}
           {done && (
             <p className="meta ok">
-              Protection bought. {txUrl ? <a className="linkbtn" href={txUrl} target="_blank" rel="noreferrer">View transaction</a> : null}
+              Done. You are protected. {txUrl ? <a className="linkbtn" href={txUrl} target="_blank" rel="noreferrer">Receipt</a> : null}
             </p>
           )}
           {err && <p className="meta warn">{err}</p>}
@@ -260,21 +221,21 @@ export default function Market() {
 
         <div className="mine" id="covers">
           <h2 className="h2">My protection</h2>
-          {!signer && <p className="meta">Connect a wallet to see your protection.</p>}
-          {signer && covers && covers.length === 0 && <p className="meta">You have no protection yet. Buy some above.</p>}
+          {!signer && <p className="meta">Connect to see your protection.</p>}
+          {signer && covers && covers.length === 0 && <p className="meta">Nothing yet.</p>}
           {signer && !covers && <p className="meta">Loading…</p>}
           <ul className="covers">
             {covers?.map((c) => (
               <li key={`${c.sessionId}-${c.coverId}`}>
                 <div>
-                  <p className="covers__t">Round {c.sessionId.toString()} · {snap?.tiers[c.tier]?.name}</p>
+                  <p className="covers__t">{snap?.tiers[c.tier]?.name} protection</p>
                   <p className="meta">{STATE_TEXT[c.state]}</p>
                 </div>
                 <dl className="covers__n">
-                  <div><dt className="meta">Protected</dt><dd>{fmtUsd(c.notional)}</dd></div>
-                  <div><dt className="meta">Fee</dt><dd>{fmtUsd(c.premium)}</dd></div>
+                  <div><dt className="meta">Protected</dt><dd>${fmtUsd(c.notional)}</dd></div>
+                  <div><dt className="meta">Fee</dt><dd>${fmtUsd(c.premium)}</dd></div>
                   <div><dt className="meta">{c.state === "paid" || c.state === "nopayout" ? "Paid" : c.state === "refunded" ? "Refund" : "Most we pay"}</dt>
-                    <dd>{c.state === "paid" || c.state === "nopayout" ? fmtUsd(c.payout) : c.state === "refunded" ? fmtUsd(c.premium) : fmtUsd(c.maxPayout)}</dd></div>
+                    <dd>${c.state === "paid" || c.state === "nopayout" ? fmtUsd(c.payout) : c.state === "refunded" ? fmtUsd(c.premium) : fmtUsd(c.maxPayout)}</dd></div>
                 </dl>
               </li>
             ))}
@@ -282,7 +243,7 @@ export default function Market() {
           {me && me.claimable > 0n && (
             <MagneticButton
               small
-              label={`Claim ${fmtUsd(me.claimable)} USDC`}
+              label={`Collect $${fmtUsd(me.claimable)}`}
               disabled={busy}
               onClick={() => void act(async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "claim"); })}
             />

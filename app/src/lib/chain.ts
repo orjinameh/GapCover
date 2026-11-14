@@ -123,10 +123,10 @@ export function phaseOf(s: Snapshot): { phase: Phase; label: string; target?: bi
   const now = s.now + BigInt(Math.floor((Date.now() - s.fetchedAt) / 1000));
   const x = s.session;
   if (!x || x.status === STATUS.Settled || x.status === STATUS.Voided || x.status === STATUS.None)
-    return { phase: "idle", label: "No session scheduled" };
-  if (now < x.closeTime) return { phase: "sale", label: "Market open · cover on sale", target: x.closeTime };
-  if (now < x.openTime) return { phase: "frozen", label: "Market closed · feed frozen", target: x.openTime };
-  return { phase: "await", label: "Open · awaiting first print" };
+    return { phase: "idle", label: "Nothing on sale" };
+  if (now < x.closeTime) return { phase: "sale", label: "Market open", target: x.closeTime };
+  if (now < x.openTime) return { phase: "frozen", label: "Market closed", target: x.openTime };
+  return { phase: "await", label: "Market just opened" };
 }
 
 export function secondsLeft(s: Snapshot, target?: bigint): number | null {

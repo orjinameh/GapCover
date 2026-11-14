@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { CHAIN, DEPLOYED, need } from "@/lib/config";
+import { DEPLOYED, need } from "@/lib/config";
 import { POOL_ABI, USDC_ABI } from "@/lib/abis";
 import { ensureAllowance, send } from "@/lib/chain";
 import { fmtUsd, parseUsd } from "@/lib/math";
@@ -24,15 +24,15 @@ export default function Underwrite() {
   const util = snap && snap.totalAssets > 0n && snap.session ? Number((snap.session.reserved * 10_000n) / snap.totalAssets) / 100 : 0;
   const yieldPct = snap ? (Number(snap.sharePrice) / 1e18 - 1) * 100 : 0;
 
-  async function act(label: string, fn: () => Promise<void>) {
+  async function act(_label: string, fn: () => Promise<void>) {
     setBusy(true);
     setMsg(null);
     try {
       await fn();
-      setMsg({ ok: true, t: `${label} confirmed.` });
+      setMsg({ ok: true, t: "Done." });
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);
-      setMsg({ ok: false, t: /User rejected|denied/i.test(m) ? "Cancelled in your wallet." : m.split("\n")[0] });
+      setMsg({ ok: false, t: /User rejected|denied/i.test(m) ? "Cancelled." : m.split("\n")[0] });
     } finally {
       setBusy(false);
       void refresh();
@@ -40,16 +40,16 @@ export default function Underwrite() {
   }
 
   let dep: { label: string; onClick?: () => void; disabled?: boolean } = { label: "Loading", disabled: true };
-  if (!signer) dep = { label: "Connect wallet", onClick: () => setWalletOpen(true) };
-  else if (wrongNetwork) dep = { label: `Switch to ${CHAIN.name}`, onClick: () => void switchNetwork() };
+  if (!signer) dep = { label: "Connect", onClick: () => setWalletOpen(true) };
+  else if (wrongNetwork) dep = { label: "Switch network", onClick: () => void switchNetwork() };
   else if (snap && me) {
-    if (snap.locked) dep = { label: "Locked while stock protection is active", disabled: true };
+    if (snap.locked) dep = { label: "Locked for now", disabled: true };
     else if (a === 0n) dep = { label: "Enter an amount", disabled: true };
     else if (a > me.usdc) dep = { label: "Not enough test dollars", disabled: true };
-    else if (busy) dep = { label: "Confirm in wallet…", disabled: true };
+    else if (busy) dep = { label: "Confirm…", disabled: true };
     else
       dep = {
-        label: `Add ${fmtUsd(a)} USDC`,
+        label: `Add $${fmtUsd(a)}`,
         onClick: () =>
           void act("Deposit", async () => {
             await ensureAllowance(signer, a);
@@ -63,14 +63,11 @@ export default function Underwrite() {
       <aside className="rail">
         <p className="meta">Provide liquidity</p>
         <p className="lede">
-          You add money that pays people when their stock drops, and you earn their fees. No drops? You keep the fees. Big drop? You can lose some of your money.
+          Add money that pays people when their stock drops. Earn their fees. Big drop? You can lose some of your money.
         </p>
-        <p className="meta">You get pool shares, not a new coin.</p>
-        <p className="meta rail__foot">
-          Locked while protection is active, so nobody joins late or leaves early.</p>
       </aside>
       <div className="stage">
-        <p className="meta">{snap?.locked ? "Locked until the current round ends" : "Open: you can add or take out money"}</p>
+        <p className="meta">{snap?.locked ? "Locked while protection is active" : "Open: add or take out money"}</p>
         <h1 className="display display--md">
           <span className="display__row">Earn from</span>
           <span className="display__row display__row--outline">the fees.</span>
@@ -79,16 +76,15 @@ export default function Underwrite() {
         <PoolFlow />
 
         <dl className="rows">
-          <div><dt>Total money in the pool</dt><dd>{snap ? fmtUsd(snap.totalAssets) : "…"} USDC</dd></div>
-          <div><dt>Set aside for possible payouts</dt><dd>{util.toFixed(2)}%</dd></div>
-          <div><dt>Value of one share</dt><dd>{snap ? (Number(snap.sharePrice) / 1e18).toFixed(6) : "…"}</dd></div>
-          <div><dt>Gain or loss since start</dt><dd>{yieldPct >= 0 ? "+" : ""}{yieldPct.toFixed(4)}%</dd></div>
-          <div><dt>Your money in the pool</dt><dd>{me ? fmtUsd(me.shareValue) : "Connect to see"} USDC</dd></div>
+          <div><dt>Money in the pool</dt><dd>${snap ? fmtUsd(snap.totalAssets) : "…"}</dd></div>
+          <div><dt>Held back for payouts</dt><dd>{util.toFixed(0)}%</dd></div>
+          <div><dt>Earned so far</dt><dd>{yieldPct >= 0 ? "+" : ""}{yieldPct.toFixed(2)}%</dd></div>
+          <div><dt>Your money</dt><dd>{me ? `$${fmtUsd(me.shareValue)}` : "Connect to see"}</dd></div>
         </dl>
 
         <div className="flow">
           <div className="flow__step">
-            <p className="meta">Amount to add, in test dollars (mUSDC){me ? ` · you hold ${fmtUsd(me.usdc)}` : ""}</p>
+            <p className="meta">Amount to add, in dollars{me ? ` · you have $${fmtUsd(me.usdc)}` : ""}</p>
             <label className="field-in">
               <input aria-label="Amount to deposit" value={amount} inputMode="decimal" onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} />
             </label>
@@ -107,14 +103,14 @@ export default function Underwrite() {
               />
             )}
             {signer && !wrongNetwork && me && me.usdc < 100n * 10n ** 6n && (
-              <MagneticButton small label="Get test mUSDC" disabled={busy} onClick={() => void act("Faucet", async () => { await send(signer, need("usdc"), USDC_ABI, "faucet", [signer.address, 5_000n * 10n ** 6n]); })} />
+              <MagneticButton small label="Get practice money" disabled={busy} onClick={() => void act("Faucet", async () => { await send(signer, need("usdc"), USDC_ABI, "faucet", [signer.address, 5_000n * 10n ** 6n]); })} />
             )}
           </div>
           {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
         </div>
         <div className="meta field__legal">
-          <p><b>The risk:</b> you can lose some or all of the money you add. Your money is stuck while protection is active.</p>
-          <p><b>This is a test:</b> the pool holds play money put in by the developer. Nothing here is real money or real insurance. Not financial advice.</p>
+          <p><b>Risk:</b> you can lose some or all of this money. It is locked while protection is active.</p>
+          <p><b>Practice version:</b> play money, nothing here is real. Not advice.</p>
         </div>
       </div>
     </section>
