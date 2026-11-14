@@ -43,7 +43,7 @@ function WalletSheet() {
                 <button className="sheet__btn" onClick={() => { try { void navigator.clipboard.writeText(signer.address); } catch {} }}>
                   <span>Copy my address</span>
                 </button>
-                <a className="sheet__btn" href="https://portal.cdp.coinbase.com/products/faucet" target="_blank" rel="noreferrer">
+                <a className="sheet__btn" href="https://portal.cdp.coinbase.com/onchain-tools/faucet" target="_blank" rel="noreferrer">
                   <span>Open the free faucet</span>
                   <span className="meta">Pick Base Sepolia</span>
                 </a>
