@@ -62,7 +62,7 @@ The history panel reads the contract directly (`sessionCount`, `getSession`, `ge
 - Payouts are pushed in `settle`, with at most 32 covers per session. Real volume needs pull-based claims.
 - Terms are fixed and there is no pause or guardian. The only emergency path is voiding a session.
 - A holder could buy cover, then move the tokens out. Acceptable on testnet, not with real payouts.
-- No withdraw-part option and no per-provider earnings history yet (it needs deposit events).
+- Per-provider earnings scan event logs in 9,000-block chunks from the deploy block. Fine on testnet, a subgraph is better at scale.
 - Fees are prototype numbers. They must be backtested on real overnight and weekend gaps before any real launch.
 - Not audited. No legal or regulatory review.
 

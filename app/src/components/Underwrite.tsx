@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DEPLOYED, need } from "@/lib/config";
 import { POOL_ABI, USDC_ABI } from "@/lib/abis";
 import { ensureAllowance, send } from "@/lib/chain";
 import { fmtUsd, parseUsd } from "@/lib/math";
+import { readNetDeposits } from "@/lib/earnings";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
 import PoolFlow from "./PoolFlow";
@@ -12,8 +13,19 @@ import PoolHistory from "./PoolHistory";
 export default function Underwrite() {
   const { snap, signer, setWalletOpen, wrongNetwork, switchNetwork, refresh } = useApp();
   const [amount, setAmount] = useState("1000");
+  const [out, setOut] = useState("");
+  const [net, setNet] = useState<bigint | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
+
+  const myAddr = snap?.me?.address;
+  const myShares = snap?.me?.shares;
+  useEffect(() => {
+    if (!myAddr) { setNet(null); return; }
+    let live = true;
+    void readNetDeposits(myAddr).then((n) => live && setNet(n));
+    return () => { live = false; };
+  }, [myAddr, myShares]);
 
   if (!DEPLOYED) {
     return (
@@ -23,6 +35,11 @@ export default function Underwrite() {
   const me = snap?.me;
   const a = parseUsd(amount);
   const util = snap && snap.totalAssets > 0n && snap.session ? Number((snap.session.reserved * 10_000n) / snap.totalAssets) / 100 : 0;
+  const held = snap?.session ? snap.session.reserved : 0n;
+  const free = snap ? (snap.totalAssets > held ? snap.totalAssets - held : 0n) : 0n;
+  const o = parseUsd(out);
+  const outShares = me && me.shareValue > 0n ? (o >= me.shareValue ? me.shares : (o * me.shares) / me.shareValue) : 0n;
+  const earned = me && net !== null ? me.shareValue - net : null;
   const yieldPct = snap ? (Number(snap.sharePrice) / 1e18 - 1) * 100 : 0;
 
   async function act(_label: string, fn: () => Promise<void>) {
@@ -78,9 +95,11 @@ export default function Underwrite() {
 
         <dl className="rows">
           <div><dt>Money in the pool</dt><dd>${snap ? fmtUsd(snap.totalAssets) : "…"}</dd></div>
-          <div><dt>Held back for payouts</dt><dd>{util.toFixed(0)}%</dd></div>
+          <div><dt>Free to use</dt><dd>{snap ? `$${fmtUsd(free)}` : "…"}</dd></div>
+          <div><dt>Held back for payouts</dt><dd>{snap ? `$${fmtUsd(held)}` : "…"} · {util.toFixed(0)}%</dd></div>
           <div><dt>Earned so far</dt><dd>{yieldPct >= 0 ? "+" : ""}{yieldPct.toFixed(2)}%</dd></div>
           <div><dt>Your money</dt><dd>{me ? `$${fmtUsd(me.shareValue)}` : "Connect to see"}</dd></div>
+          {earned !== null && <div><dt>You earned</dt><dd>{earned < 0n ? "−" : "+"}${fmtUsd(earned < 0n ? -earned : earned)}</dd></div>}
         </dl>
 
         <PoolHistory tiers={snap?.tiers} refreshKey={`${snap?.activeId ?? 0}-${snap?.session?.status ?? 0}`} />
@@ -94,9 +113,33 @@ export default function Underwrite() {
           </div>
         </div>
 
+        {me && me.shares > 0n && (
+          <div className="flow">
+            <div className="flow__step">
+              <p className="meta">Amount to take out, in dollars</p>
+              <label className="field-in">
+                <input aria-label="Amount to withdraw" value={out} placeholder="0" inputMode="decimal" onChange={(e) => setOut(e.target.value.replace(/[^0-9.]/g, ""))} />
+              </label>
+              <div className="ex__chips">
+                {[25, 50, 75].map((pc) => (
+                  <button key={pc} type="button" className="ex-chip" onClick={() => setOut(fmtUsd((me.shareValue * BigInt(pc)) / 100n).replace(/,/g, ""))}>{pc}%</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="cta">
           <div className="btnrow">
             <MagneticButton label={dep.label} onClick={dep.onClick} disabled={dep.disabled} />
+            {signer && !wrongNetwork && me && me.shares > 0n && o > 0n && (
+              <MagneticButton
+                small
+                label={`Take out $${fmtUsd(o >= me.shareValue ? me.shareValue : o)}`}
+                disabled={busy || !!snap?.locked || outShares === 0n}
+                onClick={() => void act("Withdrawal", async () => { await send(signer, need("pool"), POOL_ABI, "withdraw", [outShares, signer.address]); setOut(""); })}
+              />
+            )}
             {signer && !wrongNetwork && me && me.shares > 0n && (
               <MagneticButton
                 small

@@ -43,7 +43,7 @@ Reviewed against the real-launch development brief (Nov 2026). Based on reading 
 
 Present: pool assets, reserved share, return since start, own position, deposit, withdraw all, and (added in Phase 1) a night-by-night history showing fees earned, paid out and the result, read directly from the contract.
 
-Still missing: partial withdrawal, per-provider earnings (needs deposit and withdrawal events, so a log index or subgraph), and available versus reserved capital in dollars.
+Also added: partial withdrawal, free versus held-back money in dollars, and per-provider earnings (current value minus deposits plus withdrawals, read from Deposited and Withdrawn events; the row hides if the RPC cannot serve logs).
 
 ## Underwriter partners
 
