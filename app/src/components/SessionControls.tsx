@@ -30,7 +30,8 @@ export default function SessionControls() {
       await fn();
       setMsg(`${label}: done`);
     } catch (e) {
-      setMsg(e instanceof Error ? e.message.split("\n")[0] : String(e));
+      const m = e instanceof Error ? e.message : String(e);
+      setMsg(/missing or invalid|insufficient funds|exceeds the balance/i.test(m) ? "This account has no network fee money. Open Your account, copy the address and get free test ETH for Base Sepolia." : m.split("\n")[0]);
     } finally {
       setBusy(null);
       void refresh();
