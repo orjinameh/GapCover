@@ -38,7 +38,7 @@ const STARS: [number, number, number][] = [
 ];
 
 /** The picture itself: Friday's price line, the shut night, Monday's drop and the lime net that catches it. */
-function GapChart({ p, drop, ded, cap }: { p: number; drop: number; ded: number; cap: number }) {
+function GapChart({ p, drop, ded, cap, fee }: { p: number; drop: number; ded: number; cap: number; fee: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
   useEffect(() => {
@@ -168,6 +168,12 @@ function GapChart({ p, drop, ded, cap }: { p: number; drop: number; ded: number;
             <b>{signed(wePay)}</b>
           </p>
         )}
+        {dt > 0.9 && (
+          <p className="gc-tag gc-tag--fee">
+            <span>You paid a fee {signed(-fee)}</span>
+            <b>You end at {signed(-(s / 100) * STOCKS + wePay - fee)}</b>
+          </p>
+        )}
         {nt > 0.2 && (
           <p className="gc-shut" style={{ left: `${fx(midNight)}%`, top: `${fy(baseY - 30)}%`, opacity: nt }}>
             Market shut
@@ -237,12 +243,12 @@ function PinnedStory({ drop, ded, cap, fee, nvda }: { drop: number; ded: number;
             </h2>
             <h2 className={`gs__h ${i === 3 ? "on" : ""}`}>
               <small>{signed(net)} with protection · {signed(-loss)} without</small>
-              {pay > 0 ? `We pay you ${money(pay)}.` : "Nothing to pay. You lose only the fee."}
+              {pay > 0 ? `We pay you ${money(pay)}. Fee ${money(fee)}. You end at ${signed(net)}.` : "Nothing to pay. You lose only the fee."}
             </h2>
           </div>
         </div>
         <div className="gs__chart">
-          <GapChart p={p} drop={drop} ded={ded} cap={cap} />
+          <GapChart p={p} drop={drop} ded={ded} cap={cap} fee={fee} />
         </div>
         <p className={`gs__hint ${p < 0.03 ? "on" : ""}`} aria-hidden="true">
           Scroll <i />
@@ -284,7 +290,7 @@ export default function Explainer({ tier, tierName }: { tier?: Terms; tierName?:
       <div className="ex-try">
         <p className="meta">Try another night · {tierName ?? "Standard"} · fee {money(fee)} on {money(STOCKS)}</p>
         <div className="ex-try__chart" style={skyVars(1)}>
-          <GapChart p={1} drop={drop} ded={ded} cap={cap} />
+          <GapChart p={1} drop={drop} ded={ded} cap={cap} fee={fee} />
         </div>
 
         <div className="ex-result">
