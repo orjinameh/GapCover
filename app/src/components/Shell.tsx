@@ -38,7 +38,16 @@ function WalletSheet() {
               </dl>
             )}
             {me && me.eth === 0n && (
-              <p className="meta warn">This account has no network fee money, so it can't send anything yet. Copy the address above and get free test ETH for Base Sepolia from a faucet. Then try again.</p>
+              <>
+                <p className="meta warn">This account has no network fee money, so it can't send anything yet. Copy the address, paste it into the free faucet, then come back.</p>
+                <button className="sheet__btn" onClick={() => { try { void navigator.clipboard.writeText(signer.address); } catch {} }}>
+                  <span>Copy my address</span>
+                </button>
+                <a className="sheet__btn" href="https://portal.cdp.coinbase.com/products/faucet" target="_blank" rel="noreferrer">
+                  <span>Open the free faucet</span>
+                  <span className="meta">Pick Base Sepolia</span>
+                </a>
+              </>
             )}
             {signer.kind === "browser" && wrongNetwork && (
               <button className="sheet__btn" onClick={() => void switchNetwork()}>Switch network</button>

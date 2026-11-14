@@ -288,6 +288,7 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: v
 .sheet__head { display: flex; justify-content: space-between; }
 .sheet__x { opacity: 0.6; }
 .sheet__btn { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; width: 100%; text-align: left; padding: 1.3rem 1.2rem; border: 1px solid var(--fg); font-size: 1.3rem; letter-spacing: -0.02em; box-shadow: 6px 6px 0 var(--fg); margin-bottom: 0.6rem; transition: transform 700ms var(--ease), box-shadow 700ms var(--ease), background 700ms var(--ease), color 700ms var(--ease); }
+a.sheet__btn { color: inherit; text-decoration: none; background: transparent; box-sizing: border-box; }
 .sheet__btn:hover { transform: translate(6px, 6px); box-shadow: 0 0 0 var(--fg); background: var(--fg); color: var(--bg); }
 .h2--sm { font-size: clamp(2rem, 4vw, 3rem); }
 .sheet .addr { word-break: break-all; font-size: 12px; }
