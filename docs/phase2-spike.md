@@ -179,3 +179,21 @@ Four stocks (NVDA, TSLA, AAPL, MSTR) as one shared Standard pool, 521 weekends, 
 The worst weekend is about 85% to 90% of the share of the pool one night may use, so the pool-use limit is the main dial. A 0.40% fee earns about nothing if buyers show up before bad weekends, so **keep Standard at 0.60%**. This supersedes the earlier fee proposal, which used average payouts only.
 
 Recommendation: limit one night to 10% to 15% of the pool, keep the 0.60% Standard fee, add a per-person cap, a larger minimum cover and a pause switch, and put team or partner money in as first loss. Not tested: demand. A 0.60% weekly fee is about 31% a year for someone who protects every weekend.
+
+### Level pricing results (15 Nov 2026)
+
+Same four stocks, 521 weekends, 15% of the pool used per night. Yearly return to providers, buyers random / timing 1.5:
+
+| Level | Fee | Yearly return | Worst weekend | Worst year | Recovery |
+|---|---|---|---|---|---|
+| Light | 0.20% | 5.7% / 3.5% | -8.4% / -10.8% | -5.3% / -12.7% | 2.3 / 4.0 yrs |
+| Light | 0.30% | 11.3% / 9.0% | -8.3% / -10.7% | -0.2% / -8.1% | 1.2 / 2.7 yrs |
+| Light | 0.40% | 17.2% / 14.8% | -8.2% / -10.6% | +2.4% / -3.1% | 0.8 / 1.4 yrs |
+| Light | 0.50% | 23.5% / 20.9% | -8.1% / -10.5% | +3.0% / +2.0% | 0.5 / 1.1 yrs |
+| Standard | 0.60% | 32.8% / 24.4% | -12.7% / -14.1% | +5.3% / -5.4% | 0.8 / 1.5 yrs |
+| Tight | 0.50% | 29.4% / 9.3% | -13.5% | -18.9% / -44.5% | 1.7 / 5.0 yrs |
+| Tight | 0.60% | 51.1% / 27.7% | -13.2% | -5.2% / -35.0% | 1.3 / 2.4 yrs |
+| Tight | 0.70% | 76.3% / 49.2% | -12.9% | +10.8% / -23.9% | 0.8 / 1.7 yrs |
+| Tight | 0.90% | 139.9% / 103.1% | -12.3% | +16.4% / +4.0% | 0.5 / 0.8 yrs |
+
+Decisions: Light re-priced from 0.20% to **0.40%** (0.20% earned 3% to 6% a year with 2 to 4 year recoveries). Standard stays at 0.60%. **Tight is hidden in the app.** It pays out often (1% deductible, 5% cap, so each reserved dollar backs three times the notional), which gives large swings at a fee buyers would find poor value (1% deductible plus 0.9% fee), and at fees buyers would accept it hurts providers. It stays in the contract unchanged. Not tested: demand at these fees.

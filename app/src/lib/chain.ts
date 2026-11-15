@@ -70,7 +70,8 @@ export async function readSnapshot(me?: Address): Promise<Snapshot> {
     rd<bigint>(pool, POOL_ABI, "activeSession"),
     rd<readonly [bigint, bigint, bigint, bigint, bigint]>(feed, FEED_ABI, "latestRoundData"),
     rd<bigint>(spot, SPOT_ABI, "price", [stock]),
-    Promise.all([0, 1, 2].map((i) => rd<readonly [number, number, number]>(pool, POOL_ABI, "tiers", [BigInt(i)]))),
+    // Only Light and Standard are offered. Tight stays in the contract but is hidden (see docs/phase2-spike.md).
+    Promise.all([0, 1].map((i) => rd<readonly [number, number, number]>(pool, POOL_ABI, "tiers", [BigInt(i)]))),
   ]);
 
   const tiers: Tier[] = tierRaw.map((t, i) => ({

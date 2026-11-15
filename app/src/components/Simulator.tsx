@@ -8,9 +8,8 @@ import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
 
 const FALLBACK_TIERS: Tier[] = [
-  { name: "Light", deductibleBps: 500, capBps: 1500, premiumBps: 20 },
+  { name: "Light", deductibleBps: 500, capBps: 1500, premiumBps: 40 },
   { name: "Standard", deductibleBps: 200, capBps: 1000, premiumBps: 60 },
-  { name: "Tight", deductibleBps: 100, capBps: 500, premiumBps: 90 },
 ];
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;

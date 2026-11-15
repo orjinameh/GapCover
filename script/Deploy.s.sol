@@ -31,7 +31,7 @@ contract Deploy is Script {
         spot.setPrice(address(stock), 100e8);
 
         CoverPool.Tier[] memory tiers = new CoverPool.Tier[](3);
-        tiers[0] = CoverPool.Tier(500, 1500, 20); // Light:    5% deductible, 15% cap, 0.20%
+        tiers[0] = CoverPool.Tier(500, 1500, 40); // Light:    5% deductible, 15% cap, 0.40% (re-priced from 0.20%, see docs)
         tiers[1] = CoverPool.Tier(200, 1000, 60); // Standard: 2% deductible, 10% cap, 0.60%
         tiers[2] = CoverPool.Tier(100, 500, 90); //  Tight:    1% deductible,  5% cap, 0.90%
 
