@@ -8,6 +8,7 @@ import { fmtPx, fmtTokens, fmtUsd, notionalOf, parseTokens, premiumOf } from "@/
 import { readMyCovers, STATE_TEXT, type MyCover } from "@/lib/covers";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
+import FeeMoneyNote from "./FeeMoneyNote";
 import Explainer from "./Explainer";
 
 const when = (ts: bigint) => new Date(Number(ts) * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -194,7 +195,8 @@ export default function Market() {
             <p className="meta">3 · The price</p>
             {view && (
               <dl className="rows">
-                <div><dt>Stocks protected</dt><dd>${fmtUsd(view.notional)}</dd></div>
+                <div><dt>Stocks</dt><dd>{fmtTokens(view.raw)} × ${fmtPx(snap!.feedPrice)}</dd></div>
+                <div><dt>Worth</dt><dd>${fmtUsd(view.notional)}</dd></div>
                 <div><dt>Fee</dt><dd>${fmtUsd(view.premium)}</dd></div>
                 <div><dt>Most we pay</dt><dd>${fmtUsd(view.maxPayout)}</dd></div>
               </dl>
@@ -203,6 +205,7 @@ export default function Market() {
         </div>
 
         <div className="cta">
+          <FeeMoneyNote />
           <MagneticButton label={cta.label} onClick={cta.onClick} disabled={cta.disabled} />
           {cta.note && <p className="meta">{cta.note}</p>}
           {lowFunds && signer && !wrongNetwork && (
@@ -232,6 +235,10 @@ export default function Market() {
                 <div>
                   <p className="covers__t">{snap?.tiers[c.tier]?.name} protection</p>
                   <p className="meta">{STATE_TEXT[c.state]}</p>
+                  {(() => {
+                    const px = c.session.refPrice > 0n ? c.session.refPrice : snap?.feedPrice ?? 0n;
+                    return px > 0n ? <p className="meta">{fmtTokens((c.notional * 10n ** 20n) / px)} stocks at ${fmtPx(px)} each</p> : null;
+                  })()}
                 </div>
                 <dl className="covers__n">
                   <div><dt className="meta">Protected</dt><dd>${fmtUsd(c.notional)}</dd></div>

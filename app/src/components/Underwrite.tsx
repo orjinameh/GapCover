@@ -7,6 +7,7 @@ import { fmtUsd, parseUsd } from "@/lib/math";
 import { readNetDeposits } from "@/lib/earnings";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
+import FeeMoneyNote from "./FeeMoneyNote";
 import PoolFlow from "./PoolFlow";
 import PoolHistory from "./PoolHistory";
 
@@ -130,6 +131,7 @@ export default function Underwrite() {
         )}
 
         <div className="cta">
+          <FeeMoneyNote />
           <div className="btnrow">
             <MagneticButton label={dep.label} onClick={dep.onClick} disabled={dep.disabled} />
             {signer && !wrongNetwork && me && me.shares > 0n && o > 0n && (
