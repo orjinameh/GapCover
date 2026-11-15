@@ -109,4 +109,14 @@ A real version looks feasible, and the pool's design already matches the real fe
 BASE_RPC=https://mainnet.base.org forge test --match-path test/ForkReal.t.sol -vv > fork.log 2>&1
 ```
 
-Without `BASE_RPC` the tests return without running. Not covered: settlement against a real post-weekend print, which needs a historical fork.
+Without `BASE_RPC` the tests return without running. Settlement against real prints is covered by the replay below.
+
+## Replay of the real Nvidia weekend
+
+`test/ForkReplay.t.sol` reads the feed's real old rounds (6 to 9 Nov 2026), moves time with `vm.warp`, buys $10,000 of Standard cover at the real Friday price, closes at the Friday shutdown and settles with the real round id. The pool proves the print is the first one itself. It runs the same weekend under both settlement rules: the Monday 09:30 ET open (expected about $713) and the Sunday 20:00 ET resume (expected about $62). It also checks each payout against separate maths.
+
+```
+BASE_RPC=https://mainnet.base.org forge test --match-path test/ForkReplay.t.sol -vv > replay.log 2>&1
+```
+
+Same stand-in token as above. Only the purchase and the close read "the latest round", so those two are pointed at the real Friday round with a mock call. Settlement uses no mock.
