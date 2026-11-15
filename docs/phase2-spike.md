@@ -98,3 +98,13 @@ A real version looks feasible, and the pool's design already matches the real fe
 - Token addresses, and whether a testnet token or feed exists, are unconfirmed.
 - Whether smart contracts are allowed to hold these tokens is not addressed in the docs. The pool does not need to hold them, but a launch partner may ask.
 - Real decimals of the token, and the actual (not documented) update behaviour right after the weekend resume.
+
+## Fork test against the real contracts
+
+`test/ForkReal.t.sol` runs the real pool against real USDC, the real NVDAc token and the real NVDA feed on a Base mainnet fork. It checks the 8-decimal scaling, that the fee and maximum payout match independent maths, that the real USDC moves exactly the fee, and that closing a night snapshots the real price and multiplier. It sends nothing to the real chain.
+
+```
+BASE_RPC=https://mainnet.base.org HOLDER=0x... forge test --match-path test/ForkReal.t.sol -vv > fork.log 2>&1
+```
+
+`HOLDER` is any ordinary wallet that holds at least 10 NVDAc, taken from the token's Holders tab on BaseScan. Without both variables the tests return without running. Not covered: settlement against a real post-weekend print, which needs a historical fork and is the next step.
