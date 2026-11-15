@@ -1,6 +1,21 @@
 import { parseAbi } from "viem";
 
 export const POOL_ABI = parseAbi([
+  "error SessionNotActive()",
+  "error SaleClosed()",
+  "error BadTier()",
+  "error ZeroAmount()",
+  "error FeedFrozen()",
+  "error NotHolder()",
+  "error BelowMinNotional()",
+  "error CapacityExceeded()",
+  "error TooManyCovers()",
+  "error PoolLocked()",
+  "error NotClosable()",
+  "error NotSettleable()",
+  "error NotVoidable()",
+  "error NothingToClaim()",
+  "error InsufficientShares()",
   "function totalAssets() view returns (uint256)",
   "function sharePrice() view returns (uint256)",
   "function locked() view returns (bool)",

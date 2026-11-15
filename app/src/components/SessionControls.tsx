@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { DEMO_MANUAL, need } from "@/lib/config";
+import { friendlyError } from "@/lib/friendly";
+import { DEMO_MANUAL, START_PRICE, need } from "@/lib/config";
 import { FEED_ABI, KEEPER_ABI, POOL_ABI, SPOT_ABI } from "@/lib/abis";
 import { STATUS, phaseOf, pub, send } from "@/lib/chain";
 import { useApp } from "./state";
@@ -30,8 +31,7 @@ export default function SessionControls() {
       await fn();
       setMsg(`${label}: done`);
     } catch (e) {
-      const m = e instanceof Error ? e.message : String(e);
-      setMsg(/missing or invalid|insufficient funds|exceeds the balance/i.test(m) ? "This account has no network fee money. Open Your account, copy the address and get free test ETH for Base Sepolia." : m.split("\n")[0]);
+      setMsg(friendlyError(e instanceof Error ? e.message : String(e)));
     } finally {
       setBusy(null);
       void refresh();
@@ -42,7 +42,13 @@ export default function SessionControls() {
     <div className="controls">
       <p className="meta">By hand · {phase.label}</p>
       <div className="btnrow btnrow--tight">
-        <MagneticButton small label="Start a night" disabled={!canOpen} onClick={() => void act("Start a night", async () => { if (signer) await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO_MANUAL.closeIn, DEMO_MANUAL.openIn]); })} />
+        <MagneticButton small label="Start a night" disabled={!canOpen} onClick={() => void act("Start a night", async () => { if (!signer) return;
+            // a fresh price first, so the pool does not refuse sales because the last price is old
+            const last = (await pub.readContract({ address: need("feed"), abi: FEED_ABI, functionName: "latestRoundData" })) as readonly [bigint, bigint, bigint, bigint, bigint];
+            const px = last[1] > 0n ? last[1] : START_PRICE;
+            await send(signer, need("feed"), FEED_ABI, "pushRound", [px]);
+            await send(signer, need("spot"), SPOT_ABI, "setPrice", [need("stock"), px]);
+            await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO_MANUAL.closeIn, DEMO_MANUAL.openIn]) })} />
         <MagneticButton small label="Close the market" disabled={!canClose} onClick={() => void act("Close the market", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "closeSession", [snap.activeId]); })} />
         <label className="gapin">
           <span className="meta">Drop %</span>
