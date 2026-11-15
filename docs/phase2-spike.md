@@ -132,3 +132,25 @@ FILES=nvda.csv,tsla.csv node scripts/fee-backtest.mjs > backtest.log 2>&1
 ```
 
 It uses price gaps only. It does not model people buying cover when they expect bad news, partner costs, or weekends missing from the file.
+
+### Backtest results (15 Nov 2026)
+
+Source: Yahoo daily prices, Nov 2016 to Nov 2026, Friday-style close to the next open. NVDA, TSLA, AAPL and MSTR, 521 weekends each, 2,084 in total. Loss ratio = average payout / fee.
+
+| Level (fee) | All four stocks, loss ratio | Break-even fee | Pays on | Worst 4 weekends in a row |
+|---|---|---|---|---|
+| Light (0.20%) | 0.46 | 0.092% | 2.4% of weekends | 34% of cover value |
+| Standard (0.60%) | 0.38 | 0.230% | 10.5% | 36% |
+| Tight (0.90%) | 0.36 | 0.327% | 20.6% | 20% |
+
+The four-stock "worst 4 in a row" is the single worst weekend hitting all four stocks at once, since the files are merged by date.
+
+By stock, Standard: loss ratio NVDA 0.37, TSLA 0.40, AAPL 0.15, MSTR 0.61. **A single year went above 1.00 (the pool lost money) for NVDA in 2020 (1.02), TSLA in 2020 (1.33) and MSTR in 2021, 2022, 2025 and 2026 (1.35, 1.48, 1.01, 1.12).** All four together never went above 0.85 (2020), so a shared pool is steadier than a pool per stock.
+
+Biggest weekend drops: NVDA 14.7%, TSLA 14.9%, AAPL 13.0%, MSTR 27.4%. The cap is 10% on Standard, so the pool pays at most that.
+
+Proposed Standard fee per stock, using average payout / 0.40 (the pooled 0.38 loss ratio, which leaves room for bad years and for people buying before expected bad news): **NVDA 0.55%, TSLA 0.60%, AAPL 0.23%, MSTR 0.92%.** For Light the same method gives 0.25%, 0.20%, 0.09%, 0.39%. For Tight: 0.75%, 0.94%, 0.40%, 1.18%.
+
+Limits: price gaps only. Friday close to Monday open is close to, but not the same as, the real product's last Friday print to Monday 09:30 print. It does not model adverse selection (buying cover before news), costs, or weekends outside the 10 years. In the 12 real weekends on the feed, Standard on NVDA had a loss ratio of 1.18 because of one event, which fits the yearly picture above.
+
+A fee of 0.6% per weekend is about 31% a year for someone who protects every weekend. Real buyers are likely to protect around events instead of every weekend, which is the adverse selection the backtest cannot see.
