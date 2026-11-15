@@ -48,6 +48,7 @@ export const POOL_ABI = parseAbi([
   "function settle(uint256 id, uint80 roundId)",
   "function voidSession(uint256 id)",
   "function claim() returns (uint256)",
+  "error OneOffClosed()",
   "error AlreadySubscribed()",
   "error NotSubscribed()",
   "error OnlySelf()",
