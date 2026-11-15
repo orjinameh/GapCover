@@ -99,12 +99,14 @@ A real version looks feasible, and the pool's design already matches the real fe
 - Whether smart contracts are allowed to hold these tokens is not addressed in the docs. The pool does not need to hold them, but a launch partner may ask.
 - Real decimals of the token, and the actual (not documented) update behaviour right after the weekend resume.
 
-## Fork test against the real contracts
+## Fork test against real USDC and the real feed
 
-`test/ForkReal.t.sol` runs the real pool against real USDC, the real NVDAc token and the real NVDA feed on a Base mainnet fork. It checks the 8-decimal scaling, that the fee and maximum payout match independent maths, that the real USDC moves exactly the fee, and that closing a night snapshots the real price and multiplier. It sends nothing to the real chain.
+`test/ForkReal.t.sol` runs the real pool against real USDC and the real NVDA feed on a Base mainnet fork. It checks the 8-decimal scaling, that the fee and maximum payout match independent maths, that real USDC moves exactly the fee, and that closing a night snapshots the real price and multiplier. It sends nothing to the real chain.
+
+**The real NVDAc token cannot run inside Foundry.** Its code uses an instruction Foundry's engine does not know (`OpcodeNotFound`, found on 15 Nov 2026), so a local fork fails on the first call to it, although Base itself runs it. The test uses a stand-in token with the values the read-only probe measured on the real one: 8 decimals, multiplier 1.000537939576369481, no pending update. The real token's behaviour is therefore verified by the probe (RPC reads), not by the fork test. Anything that depends on the real token's transfer rules, policies or pause behaviour needs another way to test, for example the Base team's tooling or a small test on a live network.
 
 ```
-BASE_RPC=https://mainnet.base.org HOLDER=0x... forge test --match-path test/ForkReal.t.sol -vv > fork.log 2>&1
+BASE_RPC=https://mainnet.base.org forge test --match-path test/ForkReal.t.sol -vv > fork.log 2>&1
 ```
 
-`HOLDER` is any ordinary wallet that holds at least 10 NVDAc, taken from the token's Holders tab on BaseScan. Without both variables the tests return without running. Not covered: settlement against a real post-weekend print, which needs a historical fork and is the next step.
+Without `BASE_RPC` the tests return without running. Not covered: settlement against a real post-weekend print, which needs a historical fork.
