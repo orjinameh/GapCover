@@ -154,3 +154,13 @@ Proposed Standard fee per stock, using average payout / 0.40 (the pooled 0.38 lo
 Limits: price gaps only. Friday close to Monday open is close to, but not the same as, the real product's last Friday print to Monday 09:30 print. It does not model adverse selection (buying cover before news), costs, or weekends outside the 10 years. In the 12 real weekends on the feed, Standard on NVDA had a loss ratio of 1.18 because of one event, which fits the yearly picture above.
 
 A fee of 0.6% per weekend is about 31% a year for someone who protects every weekend. Real buyers are likely to protect around events instead of every weekend, which is the adverse selection the backtest cannot see.
+
+## Provider simulation
+
+`app/scripts/pool-sim.mjs` replays the ten years of weekend price gaps as one shared pool and prints what a liquidity provider would have earned and suffered, for several fees, several limits on how much of the pool one night may use, and two buyer behaviours (random timing, and buyers who show up before bad weekends). It reports the yearly return, worst weekend, worst year, losing years, biggest fall and the longest wait to recover. It reuses the fee backtest's price files.
+
+```
+FILES=nvda.csv,tsla.csv,aapl.csv,mstr.csv node scripts/pool-sim.mjs > poolsim.log 2>&1
+```
+
+It assumes buyers always fill the chosen share of the pool, so real returns will be lower. Before any model change is built, the choices (a limit on pool use, a fee that follows risk, a shared pool) should be picked from this output.
