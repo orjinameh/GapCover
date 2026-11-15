@@ -66,7 +66,13 @@ A real version looks feasible, and the pool's design already matches the real fe
 | Pays out USDC only | USDC can blacklist or pause addresses | Already handled: a failed payout falls back to a claimable balance. |
 | Pool never holds the stock | Policies can block addresses | Good. The pool only reads holders' balances. |
 
-## Decisions needed
+## Decisions made (15 Nov 2026)
+
+1. **Settle on the Monday regular open.** A night's open is the first regular session after the weekend, 09:30 ET, moved to the next trading day after a holiday. The settle price is the first feed print at or after that time. The pool already settles on "first print after the open time", so this is how the keeper sets `openTime`, not a contract change. The close is Friday 20:00 ET, when the feed goes silent, and the reference price is the last print before it.
+2. **Fees must be re-priced for this rule.** In 12 real weekends, a Standard cover ($60 per $10,000) would have paid out $850 against $720 of fees, because of one event. Phase 3 pricing starts from that.
+3. **The Protect page's Nvidia example uses the feed's numbers:** $187.97 on Friday and $170.81 at Monday 09:30 ET, 9.1% lower. The net result is the same -$260.
+
+## Decisions that were open
 
 1. **What counts as the open.** (The measured Nvidia weekend above makes this the most important decision: the two candidates pay about $62 versus about $713.) The feed resumes Sunday 20:00 ET with a smoothed overnight value, not at the Monday 09:30 open. A drop like the Nvidia case (news on Sunday, lower open on Monday) may only be partly in the Sunday print. Options: settle on the first print after Sunday 20:00 (simple, but smoothed), or on the first print after Monday 09:30 (matches what traders call the open, but the cover then spans Sunday night trading). This changes who wins and loses, so it is a product decision, not just a technical one.
 2. **Overnight cover.** Weekdays have no clean overnight gap in a 24/5 feed. The overnight session trades and is smoothed. The clean, honest product today is the **weekend gap**, Friday 20:00 to Sunday 20:00 ET. A weekday overnight product needs the same decision as above and more careful pricing.

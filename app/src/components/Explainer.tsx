@@ -7,7 +7,7 @@ type Terms = { deductibleBps: number; capBps: number; premiumBps: number };
 const STOCKS = 10_000;
 
 const PRESETS = [
-  { id: "nvda", label: "Nvidia, Nov 2026", drop: 5 },
+  { id: "nvda", label: "Nvidia, Nov 2026", drop: 9.1 },
   { id: "small", label: "Small drop", drop: 1 },
   { id: "up", label: "Goes up", drop: -3 },
   { id: "crash", label: "Crash", drop: 18 },
@@ -264,7 +264,7 @@ export default function Explainer({ tier, tierName }: { tier?: Terms; tierName?:
   const cap = t.capBps / 100;
   const fee = (STOCKS * t.premiumBps) / 10_000;
 
-  const [drop, setDrop] = useState(5);
+  const [drop, setDrop] = useState(9.1);
   const [preset, setPreset] = useState<string | null>("nvda");
   const [still, setStill] = useState(false);
   useEffect(() => {
@@ -340,8 +340,8 @@ export default function Explainer({ tier, tierName }: { tier?: Terms; tierName?:
 
         {preset === "nvda" && (
           <p className="meta ex__src">
-            Real case: Nvidia closed Friday 6 Nov at $186.64. On Sunday it announced a review after news about its CEO. It opened about 5% lower on Monday.
-            Rounded, for illustration. Sources:
+            Real case: Nvidia&apos;s stock token on Base (NVDAc), with prices from its Chainlink feed. Friday 6 Nov, last price before the weekend: $187.97.
+            Monday 9 Nov at 9:30 ET: $170.81, 9.1% lower, after news that Nvidia was looking into its CEO. Rounded, for illustration. News:
             <a className="linkbtn" href="https://ny1.com/nyc/all-boroughs/ap-top-news/2026/11/09/nvidia-shares-drop-after-co-investigates-whether-ceo-was-target-of-a-foreign-intelligence-effort" target="_blank" rel="noreferrer">AP</a>
             <a className="linkbtn" href="https://www.ctvnews.ca/business/article/internal-probe-into-ceo-jensen-huang-and-foreign-intelligence-weighs-on-high-flying-nvidia-shares/" target="_blank" rel="noreferrer">CTV</a>
             <a className="linkbtn" href="https://www.thestar.com.my/tech/tech-news/2026/11/09/nvidia-falls-about-3-in-after-hours-and-perpetual-futures-trade" target="_blank" rel="noreferrer">Reuters</a>
