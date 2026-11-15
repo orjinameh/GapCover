@@ -43,9 +43,8 @@ export default function SessionControls() {
       <p className="meta">By hand · {phase.label}</p>
       <div className="btnrow btnrow--tight">
         <MagneticButton small label="Start a night" disabled={!canOpen} onClick={() => void act("Start a night", async () => { if (!signer) return;
-            // a fresh price first, so the pool does not refuse sales because the last price is old
-            const last = (await pub.readContract({ address: need("feed"), abi: FEED_ABI, functionName: "latestRoundData" })) as readonly [bigint, bigint, bigint, bigint, bigint];
-            const px = last[1] > 0n ? last[1] : START_PRICE;
+            // every practice night starts at a fresh $100, and the pool needs a recent price to sell protection
+            const px = START_PRICE;
             await send(signer, need("feed"), FEED_ABI, "pushRound", [px]);
             await send(signer, need("spot"), SPOT_ABI, "setPrice", [need("stock"), px]);
             await send(signer, need("keeper"), KEEPER_ABI, "scheduleNow", [need("pool"), DEMO_MANUAL.closeIn, DEMO_MANUAL.openIn]) })} />
