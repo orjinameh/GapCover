@@ -6,9 +6,9 @@ Reviewed against the real-launch development brief (Nov 2026). Based on reading 
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Real USDC integration | Not started | Pool takes any 6-decimal ERC-20 by constructor arg, so this is a deployment change. Check the real token's blacklist and pause behaviour against `SafeTransfer.trySend`. |
-| Supported tokenized stock | Not started | Pool expects the B20 interface (`uiMultiplier`, `effectiveAt`). A real token must match it or needs an adapter. |
-| Validated equity price feed | Not started | Settlement proves "first print after open" using Chainlink round ids. Spec section 1 notes the real feeds are 24/5 with unverified heartbeats and decimals. Needs a spike against a live feed. |
+| Real USDC integration | Fork-tested | The pool works with real Base USDC on a mainnet fork (`test/ForkReal.t.sol`). Still to do: the real token's blacklist and pause behaviour against `SafeTransfer.trySend`. |
+| Supported tokenized stock | Partly | NVDAc is live on Base and exposes `uiMultiplier` and `effectiveAt` (read by the probe). It has 8 decimals and cannot run inside Foundry, so its own rules (policies, pausing) need another test route. |
+| Validated equity price feed | Spiked and replayed | Measured 12 weekends of the real NVDA feed (`docs/phase2-spike.md`). The pool settled the real Nvidia weekend correctly (`test/ForkReplay.t.sol`). Still to do: sequencer check, sanity bounds, a market calendar for the keeper. |
 | Verified session and settlement rules | Partly | Logic is thorough and tested on mocks. The real keeper does not exist; `MockSessionKeeper` lets anyone schedule. |
 | Real underwriting commitments | None | Pool is seeded with 100,000 mock USDC from the deployer. |
 | Premium collection and payouts | Working on testnet | Premium accrues to share price at purchase. Payouts are pushed in `settle` with a `claimable` fallback. |

@@ -120,3 +120,5 @@ BASE_RPC=https://mainnet.base.org forge test --match-path test/ForkReplay.t.sol 
 ```
 
 Same stand-in token as above. Only the purchase and the close read "the latest round", so those two are pointed at the real Friday round with a mock call. Settlement uses no mock.
+
+**Result (15 Nov 2026, both tests pass):** Friday last print $187.97. Settling on the Monday 09:30 ET print ($170.81) paid **$712.69** on a $10,000 Standard cover, against $60.00 of fees. Settling on the Sunday 20:00 ET resume print ($183.03) paid **$62.46**. Both match the separate maths within $2, and the pool accepted the real round ids as the first print after the open.
