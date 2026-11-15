@@ -39,16 +39,20 @@ function readPrices(file) {
 }
 
 // weekend -> drops (percent, positive = fell) for every stock that has that weekend
+let skippedGaps = 0;
 const byDate = new Map();
 for (const f of FILES) {
   const rows = readPrices(f);
   for (let i = 1; i < rows.length; i++) {
-    if ((rows[i].t - rows[i - 1].t) / 86400000 < 3) continue;
+    const days = (rows[i].t - rows[i - 1].t) / 86400000;
+    if (days < 3) continue;
+    if (days > 4) { skippedGaps++; continue; } // missing trading days in the file, not a weekend
     const key = new Date(rows[i].t).toISOString().slice(0, 10);
     if (!byDate.has(key)) byDate.set(key, []);
     byDate.get(key).push(((rows[i - 1].close - rows[i].open) / rows[i - 1].close) * 100);
   }
 }
+if (skippedGaps) console.log(`Skipped ${skippedGaps} gap(s) longer than 4 days (missing trading days in the files).\n`);
 const weekends = [...byDate.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
 function simulate(fee, util, adv) {
@@ -77,11 +81,13 @@ const p = (x, d = 1) => `${(x * 100).toFixed(d)}%`;
 console.log(`Shared pool over ${FILES.length} stock(s), ${weekends.length} weekends (${weekends[0][0]} to ${weekends[weekends.length - 1][0]}), level ${process.env.TIER || "Standard"}: you take ${TIER.ded}%, cap ${TIER.cap}%.`);
 console.log("Returns are per year on the provider's money, before costs, compounding every weekend.\n");
 
-for (const adv of [1, 2]) {
-  console.log(`--- Buyers: ${adv === 1 ? "random timing (adverse factor 1)" : "show up before bad weekends (adverse factor 2: payouts twice the average, up to the cap)"} ---`);
+const ADVS = (process.env.ADVS || "1,2").split(",").map(Number);
+const EXTRA_UTIL = (process.env.UTILS || "0.1,0.25,0.5,1").split(",").map(Number);
+for (const adv of ADVS) {
+  console.log(`--- Buyers: ${adv === 1 ? "random timing (adverse factor 1)" : `adverse factor ${adv} (${adv === 2 ? "show up before bad weekends: " : ""}payouts ${adv} times the average, up to the cap)`} ---`);
   console.log("  fee    pool used   yearly return   worst weekend   worst year   losing years   biggest fall   longest wait to recover");
-  for (const fee of [0.3, 0.4, 0.6]) {
-    for (const util of [0.1, 0.25, 0.5, 1]) {
+  for (const fee of (process.env.FEES || "0.3,0.4,0.6").split(",").map(Number)) {
+    for (const util of EXTRA_UTIL) {
       const s = simulate(fee, util, adv);
       console.log(
         `  ${fee.toFixed(2)}%  ${p(util, 0).padStart(9)}   ${p(s.cagr).padStart(13)}   ${p(s.worstWeek).padStart(13)}   ${p(s.worstYear).padStart(10)}   ${`${s.losingYears} of ${s.nYears}`.padStart(12)}   ${p(s.maxDD).padStart(12)}   ${`${(s.longestUnder / 52).toFixed(1)} years`.padStart(14)}`,
@@ -94,5 +100,14 @@ for (const adv of [1, 2]) {
 const c = simulate(CFEE, CUTIL, CADV);
 console.log(`--- By year for fee ${CFEE}%, ${p(CUTIL, 0)} of the pool used, adverse factor ${CADV} ---`);
 for (const [y, v] of c.years) console.log(`  ${y}: ${p(v - 1)}`);
+// The weekends that hurt most for this configuration, so the numbers can be checked against real events.
+const hurt = weekends.map(([date, drops]) => {
+  let r = 0;
+  const nShare = CUTIL / drops.length / (TIER.cap / 100);
+  for (const d of drops) r += (nShare * (CFEE - Math.min(Math.max(d - TIER.ded, 0) * CADV, TIER.cap))) / 100;
+  return { date, drops, r };
+}).sort((a, b) => a.r - b.r).slice(0, 5);
+console.log("\n--- Five worst weekends for that setting (check these dates against what really happened) ---");
+for (const h of hurt) console.log(`  ${h.date}: provider ${p(h.r)}   drops ${h.drops.map((d, i) => `${FILES.length === h.drops.length ? FILES[i].replace(/\.csv$/, "") + " " : ""}${d.toFixed(1)}%`).join(", ")}`);
 console.log("\nHow to read it: 'worst weekend' is the most a provider lost in one weekend. 'Longest wait' is the longest stretch below the previous high point.");
 console.log("Limits: it assumes buyers always fill the share of the pool you choose, every weekend (real demand will be lower, so real returns will be too). Price gaps only, equal split across the stocks in the files, no costs, no change in demand when fees change, and the past ten years only.");
