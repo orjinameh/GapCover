@@ -71,7 +71,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
         The same protection, renewed for you each weekend, so you never forget. Each weekend the fee is taken from your account. If you can&apos;t pay one week, that weekend simply isn&apos;t covered and you owe nothing.
       </p>
       <p className="meta">
-        <b>Rules:</b> protection starts on the second weekend after you join, so nobody can join just before bad news. If you cancel, one more weekend is still covered, then it stops. To change the amount, cancel and join again.
+        <b>Rules:</b> protection starts on the second weekend after you join, so nobody can join just before bad news. If you cancel, up to two more weekends are still covered and charged (the one on sale now, if it hasn't renewed yet, and the next one), then it stops. There is no cancellation fee and fees already paid are not refunded. To change the amount, cancel and join again, which restarts the wait.
       </p>
 
       {sub && running && (
@@ -81,7 +81,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
           <div><dt>Level</dt><dd>{snap?.tiers[sub.tier]?.name ?? ""}</dd></div>
         </dl>
       )}
-      {sub && ending && <p className="meta">Cancelled. One more weekend is still covered, then it stops.</p>}
+      {sub && ending && <p className="meta">Cancelled. Up to two more weekends are still covered, then it stops. Remember to also remove the permission in your wallet if you want to be sure no fee is taken.</p>}
 
       <div className="btnrow">
         {ready && !running && (
@@ -103,7 +103,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
         )}
       </div>
       {!running && why && <p className="meta warn">{why}</p>}
-      <p className="meta">Subscribing lets the pool take each weekend&apos;s fee from your account. You can stop it any time by cancelling here, or by removing the permission in your wallet.</p>
+      <p className="meta">Subscribing lets the pool take each weekend&apos;s fee from your account. You can stop it any time by cancelling here. Cancelling stops the renewals but does not remove the permission, so to be fully sure, also remove it in your wallet.</p>
       {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
     </div>
   );

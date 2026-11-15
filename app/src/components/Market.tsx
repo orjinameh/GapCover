@@ -125,7 +125,7 @@ export default function Market() {
           <p className="meta"><b>When does it start?</b> On the second weekend after you subscribe, so nobody can join just before bad news. News that comes out after the market closes is not covered.</p>
           <p className="meta"><b>Is it for me?</b> Only if a surprise drop overnight would really hurt, like holding through earnings. It is not a way to make money.</p>
           <p className="meta"><b>What if the stock goes up?</b> You lose only the fee and keep the gain.</p>
-          <p className="meta"><b>How long does it last?</b> Each weekend is covered separately and renews by itself. Cancel any time, and one more weekend is still covered. If you cannot pay one week, that weekend is not covered and you owe nothing.</p>
+          <p className="meta"><b>How long does it last?</b> Each weekend is covered separately and renews by itself. Cancel any time: up to two more weekends are still covered, then it stops. If you cannot pay one week, that weekend is not covered and you owe nothing.</p>
           <p className="meta"><b>What is not covered?</b> Drops during the day, and the first part of a drop (you take that). If something unusual happens, like a stock split, we cancel and refund your fee.</p>
           <p className="meta"><b>Is this real?</b> No. Practice stocks, play money, and a made-up price anyone can change. A real version would use a trusted market price.</p>
         </details>
