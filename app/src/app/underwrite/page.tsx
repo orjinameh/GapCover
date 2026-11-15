@@ -1,5 +1,6 @@
-import Underwrite from "@/components/Underwrite";
+import { redirect } from "next/navigation";
 
+// old address, kept so shared links still work
 export default function Page() {
-  return <Underwrite />;
+  redirect("/earn");
 }

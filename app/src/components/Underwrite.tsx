@@ -80,7 +80,7 @@ export default function Underwrite() {
   return (
     <section className="market">
       <aside className="rail">
-        <p className="meta">Provide liquidity</p>
+        <p className="meta">Earn from fees</p>
         <p className="lede">
           gGAP is your share of the money that pays people when their stock drops. Its price rises from their fees. In a big drop it falls.
         </p>

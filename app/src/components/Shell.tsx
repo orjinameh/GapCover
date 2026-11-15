@@ -9,9 +9,10 @@ import { useApp } from "./state";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const NAV = [
-  { href: "/", label: "Protect" },
-  { href: "/underwrite", label: "Provide Liquidity" },
-  { href: "/demo", label: "Demo" },
+  { href: "/", label: "Home" },
+  { href: "/protect", label: "Protect" },
+  { href: "/earn", label: "Earn" },
+  { href: "/how", label: "How it works" },
 ];
 
 function WalletSheet() {
@@ -117,7 +118,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </header>
       {children}
       <footer className="foot meta">
-        Practice version. Play money, nothing here is real. Not advice. Not for U.S. residents.
+        Practice version. Play money, nothing here is real. Not advice. Not for U.S. residents. <Link href="/demo" className="linkbtn">Practice tools</Link>
       </footer>
       <WalletSheet />
     </>

@@ -9,7 +9,6 @@ import { readMyCovers, STATE_TEXT, type MyCover } from "@/lib/covers";
 import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
 import FeeMoneyNote from "./FeeMoneyNote";
-import Explainer from "./Explainer";
 import Subscribe from "./Subscribe";
 
 const when = (ts: bigint) => new Date(Number(ts) * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -119,7 +118,7 @@ export default function Market() {
         <p className="lede lede--wide">
           Pay a small fee each weekend. If your stock opens much lower on Monday, we pay you part of the loss. You subscribe once and it renews by itself.
         </p>
-        <Explainer tier={view?.tier} tierName={view?.tier.name} />
+        <p className="meta"><a className="linkbtn" href="/how">See how a weekend plays out, with numbers</a></p>
         <details className="lede lede--wide">
           <summary className="meta">Questions</summary>
           <p className="meta"><b>When does it start?</b> On the second weekend after you subscribe, so nobody can join just before bad news. News that comes out after the market closes is not covered.</p>
