@@ -48,6 +48,16 @@ export const POOL_ABI = parseAbi([
   "function settle(uint256 id, uint80 roundId)",
   "function voidSession(uint256 id)",
   "function claim() returns (uint256)",
+  "error AlreadySubscribed()",
+  "error NotSubscribed()",
+  "error OnlySelf()",
+  "function subscribe(uint8 tier, uint256 rawAmount)",
+  "function cancelSubscription()",
+  "function subs(address) view returns (bool active, bool listed, uint8 tier, uint64 since, uint64 cancelAfter, uint256 rawAmount)",
+  "function subscribersLength() view returns (uint256)",
+  "function subscriberAt(uint256) view returns (address)",
+  "function subscriptionDue(uint256 id, address who) view returns (bool)",
+  "function renewMany(uint256 id, address[] who)",
 ]);
 
 export const ERC20_ABI = parseAbi([

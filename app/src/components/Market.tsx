@@ -10,6 +10,7 @@ import { useApp } from "./state";
 import MagneticButton from "./MagneticButton";
 import FeeMoneyNote from "./FeeMoneyNote";
 import Explainer from "./Explainer";
+import Subscribe from "./Subscribe";
 
 const when = (ts: bigint) => new Date(Number(ts) * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
@@ -223,6 +224,8 @@ export default function Market() {
           )}
           {err && <p className="meta warn">{err}</p>}
         </div>
+
+        <Subscribe raw={view?.raw ?? 0n} tierIdx={tierIdx} tierName={view?.tier.name ?? ""} premium={view?.premium ?? 0n} />
 
         <div className="mine" id="covers">
           <h2 className="h2">My protection</h2>

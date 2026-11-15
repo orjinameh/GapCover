@@ -69,9 +69,19 @@ export default function SessionControls() {
             })
           }
         />
+        <MagneticButton small label="Renew subscriptions" disabled={!(idle && phase.phase === "sale")} onClick={() => void act("Renew subscriptions", async () => {
+            if (!signer) return;
+            const n = Number(await pub.readContract({ address: need("pool"), abi: POOL_ABI, functionName: "subscribersLength" }));
+            const list = await Promise.all(
+              Array.from({ length: Math.min(n, 32) }, (_, i) =>
+                pub.readContract({ address: need("pool"), abi: POOL_ABI, functionName: "subscriberAt", args: [BigInt(i)] }) as Promise<`0x${string}`>,
+              ),
+            );
+            if (list.length > 0) await send(signer, need("pool"), POOL_ABI, "renewMany", [snap.activeId, list]);
+          })} />
         <MagneticButton small label="Cancel the night" disabled={!canVoid} onClick={() => void act("Cancel the night", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "voidSession", [snap.activeId]); })} />
       </div>
-      <p className="meta">There is no live market in this practice version, so these buttons play the market. By hand, a night lasts 3 minutes: buy in the first 2, press Close the market within 30 seconds after that, then open it a minute later.</p>
+      <p className="meta">There is no live market in this practice version, so these buttons play the market. Subscribers are renewed with Renew subscriptions while the market is open (a real version does this by itself each weekend). By hand, a night lasts 3 minutes: buy in the first 2, press Close the market within 30 seconds after that, then open it a minute later.</p>
       {!signer && <p className="meta warn">Connect first.</p>}
       {msg && <p className="meta">{msg}</p>}
     </div>
