@@ -317,47 +317,158 @@ contract CoverPool {
     // ------------------------------------------------------------------ holders
 
     function buyCover(uint256 id, uint256 rawAmount, uint8 tier) external nonReentrant returns (uint256 coverId) {
+        return _buy(msg.sender, id, rawAmount, tier);
+    }
+
+    /// Shared by one-off purchases and subscription renewals. `who` pays the fee and must hold the stock.
+    function _buy(address who, uint256 id, uint256 rawAmount, uint8 tier) internal returns (uint256 coverId) {
         Session storage s = sessions[id];
+        _checkSale(s, rawAmount, tier);
+        (uint256 notional, uint256 maxPayout, uint256 premium) = _price(who, id, rawAmount, tier);
+        if (uint256(s.reserved) + maxPayout > totalAssets() + premium) revert CapacityExceeded();
+        _checkLimits(id, who, s.reserved, maxPayout);
+
+        coverId = covers[id].length;
+        covers[id].push(Cover(who, tier, uint128(notional), uint128(premium), uint128(maxPayout)));
+        holderCovers[who].push(CoverRef(uint64(id), uint32(coverId)));
+        s.reserved += uint128(maxPayout);
+        s.premiums += uint128(premium);
+        s.coverCount += 1;
+        asset.safeTransferFrom(who, address(this), premium);
+        emit CoverBought(id, coverId, who, tier, rawAmount, notional, premium, maxPayout);
+    }
+
+    function _checkSale(Session storage s, uint256 rawAmount, uint8 tier) internal view {
         if (salesPaused) revert SalesPaused();
         if (s.status != Status.Scheduled) revert SessionNotActive();
         if (block.timestamp < s.saleStart || block.timestamp + p.buyCutoff > s.closeTime) revert SaleClosed();
         if (tier >= tiers.length) revert BadTier();
         if (rawAmount == 0) revert ZeroAmount();
         if (s.coverCount >= p.maxCovers) revert TooManyCovers();
+    }
 
+    /// Reads the price, checks the buyer owns the stock, and works out notional, max payout and fee.
+    function _price(address who, uint256 id, uint256 rawAmount, uint8 tier)
+        internal
+        returns (uint256 notional, uint256 maxPayout, uint256 premium)
+    {
         (uint256 price, uint256 updatedAt) = _latest();
         if (updatedAt == 0 || updatedAt + p.refMaxAge < block.timestamp) revert FeedFrozen();
 
-        uint256 already = coveredRaw[id][msg.sender];
-        if (stock.balanceOf(msg.sender) < already + rawAmount) revert NotHolder();
-        coveredRaw[id][msg.sender] = already + rawAmount;
+        uint256 already = coveredRaw[id][who];
+        if (stock.balanceOf(who) < already + rawAmount) revert NotHolder();
+        coveredRaw[id][who] = already + rawAmount;
 
-        uint256 notional = (rawAmount * price * notionalMul) / notionalDiv;
+        notional = (rawAmount * price * notionalMul) / notionalDiv;
         if (notional < p.minNotional || notional == 0) revert BelowMinNotional();
-        Tier memory t = tiers[tier];
-        uint256 maxPayout = (notional * t.capBps) / 10_000;
-        uint256 premium = (notional * t.premiumBps + 9_999) / 10_000;
         if (notional > type(uint128).max) revert CapacityExceeded();
-        if (uint256(s.reserved) + maxPayout > totalAssets() + premium) revert CapacityExceeded();
-        _checkLimits(id, s.reserved, maxPayout);
+        Tier memory t = tiers[tier];
+        maxPayout = (notional * t.capBps) / 10_000;
+        premium = (notional * t.premiumBps + 9_999) / 10_000;
+    }
 
-        coverId = covers[id].length;
-        covers[id].push(Cover(msg.sender, tier, uint128(notional), uint128(premium), uint128(maxPayout)));
-        holderCovers[msg.sender].push(CoverRef(uint64(id), uint32(coverId)));
-        s.reserved += uint128(maxPayout);
-        s.premiums += uint128(premium);
-        s.coverCount += 1;
-        asset.safeTransferFrom(msg.sender, address(this), premium);
-        emit CoverBought(id, coverId, msg.sender, tier, rawAmount, notional, premium, maxPayout);
+    // ------------------------------------------------------------ subscriptions
+    // A subscription is a standing order: "protect N stocks at this level every weekend". It is a consent, not a
+    // payment. Each weekend anyone may call renewMany, which buys cover for each subscriber exactly as buyCover
+    // would, pulling the fee from the subscriber's wallet. If anything fails (no allowance, not enough dollars, the
+    // stock is gone, a limit is hit) that weekend is simply skipped: no cover, no debt.
+    // Safeguards: a waiting period (cover starts on the second night after subscribing), a notice period when
+    // cancelling, and no changing the amount while subscribed (cancel and join again, which restarts the wait).
+
+    uint64 public constant SUB_WAIT = 2; // first covered night is sessionCount-at-signup + 2
+    uint64 public constant SUB_NOTICE = 1; // one more night is renewed after cancelling
+
+    struct Sub {
+        bool active;
+        bool listed;
+        uint8 tier;
+        uint64 since; // sessionCount when subscribing
+        uint64 cancelAfter; // 0 = running. Otherwise the last night that is still renewed.
+        uint256 rawAmount;
+    }
+
+    mapping(address => Sub) public subs;
+    address[] internal subscribers;
+    mapping(uint256 => mapping(address => bool)) public renewedFor;
+
+    event Subscribed(address indexed holder, uint8 tier, uint256 rawAmount, uint64 firstNight);
+    event SubscriptionCancelled(address indexed holder, uint64 lastNight);
+    event Renewed(uint256 indexed id, address indexed holder, uint256 coverId);
+    event RenewalSkipped(uint256 indexed id, address indexed holder);
+
+    error AlreadySubscribed();
+    error NotSubscribed();
+    error OnlySelf();
+
+    function subscribe(uint8 tier, uint256 rawAmount) external nonReentrant {
+        Sub storage x = subs[msg.sender];
+        if (x.active && x.cancelAfter == 0) revert AlreadySubscribed();
+        if (tier >= tiers.length) revert BadTier();
+        if (rawAmount == 0) revert ZeroAmount();
+        if (stock.balanceOf(msg.sender) < rawAmount) revert NotHolder();
+        x.active = true;
+        x.tier = tier;
+        x.rawAmount = rawAmount;
+        x.since = uint64(sessionCount);
+        x.cancelAfter = 0;
+        if (!x.listed) {
+            x.listed = true;
+            subscribers.push(msg.sender);
+        }
+        emit Subscribed(msg.sender, tier, rawAmount, x.since + SUB_WAIT);
+    }
+
+    function cancelSubscription() external nonReentrant {
+        Sub storage x = subs[msg.sender];
+        if (!x.active || x.cancelAfter != 0) revert NotSubscribed();
+        x.cancelAfter = uint64(sessionCount) + SUB_NOTICE;
+        emit SubscriptionCancelled(msg.sender, x.cancelAfter);
+    }
+
+    function subscribersLength() external view returns (uint256) {
+        return subscribers.length;
+    }
+
+    function subscriberAt(uint256 i) external view returns (address) {
+        return subscribers[i];
+    }
+
+    /// True if this wallet's subscription should buy cover for night `id`.
+    function subscriptionDue(uint256 id, address who) public view returns (bool) {
+        Sub storage x = subs[who];
+        if (!x.active || renewedFor[id][who]) return false;
+        if (id < uint256(x.since) + SUB_WAIT) return false;
+        if (x.cancelAfter != 0 && id > x.cancelAfter) return false;
+        return true;
+    }
+
+    /// Anyone may call. Failures are skipped, never reverted, so one bad wallet cannot block the rest.
+    function renewMany(uint256 id, address[] calldata who) external nonReentrant {
+        for (uint256 i; i < who.length; ++i) {
+            if (!subscriptionDue(id, who[i])) continue;
+            try this.renewOne(id, who[i]) returns (uint256 coverId) {
+                emit Renewed(id, who[i], coverId);
+            } catch {
+                emit RenewalSkipped(id, who[i]);
+            }
+        }
+    }
+
+    /// Only callable by this contract (through renewMany), so a failed renewal rolls back by itself.
+    function renewOne(uint256 id, address who) external returns (uint256 coverId) {
+        if (msg.sender != address(this)) revert OnlySelf();
+        Sub storage x = subs[who];
+        renewedFor[id][who] = true;
+        return _buy(who, id, x.rawAmount, x.tier);
     }
 
     /// Night-wide and per-wallet share-of-pool limits. Records the wallet's reserved payout.
-    function _checkLimits(uint256 id, uint256 reservedNow, uint256 maxPayout) internal {
+    function _checkLimits(uint256 id, address who, uint256 reservedNow, uint256 maxPayout) internal {
         uint256 assetsNow = totalAssets();
         if (reservedNow + maxPayout > (assetsNow * p.maxUseBps) / 10_000) revert PoolUseLimit();
-        uint256 mine = holderReserved[id][msg.sender] + maxPayout;
+        uint256 mine = holderReserved[id][who] + maxPayout;
         if (mine > (assetsNow * p.maxHolderBps) / 10_000) revert HolderLimit();
-        holderReserved[id][msg.sender] = mine;
+        holderReserved[id][who] = mine;
     }
 
     function claim() external nonReentrant returns (uint256 amount) {
