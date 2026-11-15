@@ -2,6 +2,26 @@
 
 Date: 15 Nov 2026. Desk research from current Base and Chainlink docs. No code was run against a live network (the sandbox has no chain access), so everything on-chain below is **unverified until the read-only script in "Next steps" runs**.
 
+## Measured on Base mainnet (probe run, 15 Nov 2026)
+
+Read-only calls against the real NVDA feed `0x04689a41629776563E6822F76f2e57D148d28513` and token `0xb20000000000000000000078ee7ce2fE4908108C`. About one week of prices (400 rounds, 6 to 13 Nov).
+
+| Item | Measured |
+|---|---|
+| Real USDC | 6 decimals |
+| NVDAc token | 8 decimals (not the 18 that Base's docs recommend), supply about 49,256 tokens, multiplier 1.000538, no pending update |
+| Feed | 8 decimals, last print Fri 13 Nov 18:36 ET, silent all weekend as documented |
+| Typical update gap | median 10 minutes. Overnight and post-market gaps of 2 to 4 hours happen. |
+| Weekend gap | last print Fri 6 Nov 16:39 ET, first print Sun 8 Nov 20:00 ET (2 days 3 hours) |
+| Bad prints | none (no zero or negative answers in the sample) |
+| Sequencer uptime feed | answered "up" (0) since 26 Jun, so the address in the probe looks right |
+
+**The Nvidia weekend (8 to 9 Nov) in the feed:** the first print after the resume (Sun 20:00 ET) moved -2.62%. The next-largest move was -1.79% at the Monday 09:30 ET open. Together that is about -4.4%, close to the "about 5% lower" in the news. So settling on the Sunday print would have caught only about 60% of the drop. The probe does not show the prints in between, so this is indicative. The upgraded probe prints the full table.
+
+Illustration for a Standard cover on $10,000 (you take the first 2%): a -2.62% settle pays about $62. A -4.4% settle pays about $240. Same cover, same weekend.
+
+**Limits of this sample:** one weekend only, so it cannot say how often the first print arrives right at the Sunday resume. It did here, at exactly 20:00. Run the upgraded probe (it reads about seven weeks) before relying on it.
+
 ## Verdict
 
 A real version looks feasible, and the pool's design already matches the real feed's shape. Three things need a decision before building: which price print settles a night, how to treat the overnight smoothing, and where to test, because the feeds are documented for Base mainnet only.
@@ -33,7 +53,7 @@ A real version looks feasible, and the pool's design already matches the real fe
 
 ## Decisions needed
 
-1. **What counts as the open.** The feed resumes Sunday 20:00 ET with a smoothed overnight value, not at the Monday 09:30 open. A drop like the Nvidia case (news on Sunday, lower open on Monday) may only be partly in the Sunday print. Options: settle on the first print after Sunday 20:00 (simple, but smoothed), or on the first print after Monday 09:30 (matches what traders call the open, but the cover then spans Sunday night trading). This changes who wins and loses, so it is a product decision, not just a technical one.
+1. **What counts as the open.** (The measured Nvidia weekend above makes this the most important decision: the two candidates pay about $62 versus about $240.) The feed resumes Sunday 20:00 ET with a smoothed overnight value, not at the Monday 09:30 open. A drop like the Nvidia case (news on Sunday, lower open on Monday) may only be partly in the Sunday print. Options: settle on the first print after Sunday 20:00 (simple, but smoothed), or on the first print after Monday 09:30 (matches what traders call the open, but the cover then spans Sunday night trading). This changes who wins and loses, so it is a product decision, not just a technical one.
 2. **Overnight cover.** Weekdays have no clean overnight gap in a 24/5 feed. The overnight session trades and is smoothed. The clean, honest product today is the **weekend gap**, Friday 20:00 to Sunday 20:00 ET. A weekday overnight product needs the same decision as above and more careful pricing.
 3. **Where to test.** With no Base Sepolia feed documented, the options are a mainnet fork (free, no real money), a read-only script against mainnet, and a separate small mock of the real feed's quirks (zeros, silence, freezes).
 4. **Eligibility.** The tokens are for people outside the U.S. The footer already says "Not for U.S. residents", but a real launch needs a real jurisdiction check. That is a legal question.
