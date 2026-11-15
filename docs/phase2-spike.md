@@ -13,7 +13,7 @@ A real version looks feasible, and the pool's design already matches the real fe
 | Tokenized stocks | Coinbase issues B20 stock tokens natively on Base. The feed list covers AAPL, AMZN, GOOGL, META, MSFT, MSTR, NVDA, SNDK, SPCX and TSLA. Token addresses are not on the docs page. They come from the Base assets page or the registry API. Registry: `0x3f3E8cf41cdd3b1D118c16471aB0113DfDDd5CaD`. | Base docs |
 | Who can hold them | Holding and secondary trading are permissionless. KYC happens only at mint and redeem. Tokens are only available to persons in eligible jurisdictions **outside the U.S.** Onchain policies can block addresses and functions can be paused. | Base docs |
 | Price feed | Chainlink 24/5 feeds, standard `latestRoundData()` through a proxy. They publish the **token** price (underlying price x multiplier). Feed decimals are 8. | Chainlink docs |
-| Feed behaviour | Sessions (ET): pre 04:00-09:30, regular 09:30-16:00, post 16:00-20:00, overnight 20:00-04:00, weekend Fri 20:00 to Sun 20:00. No updates, not even heartbeats, while markets are closed. Overnight price is an exponential moving average. Overnight answers can be odd, including zero. Heartbeat and deviation values are not published. | Chainlink docs |
+| Feed behaviour | Sessions (ET): pre 04:00-09:30, regular 09:30-16:00, post 16:00-20:00, overnight 20:00-04:00, weekend Fri 20:00 to Sun 20:00. No updates, not even heartbeats, while markets are closed. Overnight price is an exponential moving average. Overnight answers can be odd, including zero. Chainlink's feed table (read by you on 15 Nov) lists the NVDA feed with **0.5% deviation, 86,400 s (24 h) heartbeat, 8 decimals**, and marks it **"High risk"** in Chainlink's own market-risk rating. | Chainlink docs |
 | Networks | Base **mainnet** only is named. Nothing for Base Sepolia. | Chainlink docs |
 | USDC | Base mainnet `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`. Base Sepolia `0x036CbD53842c5426634e7929541eC2318f3dCF7e`. Decimals not stated on the page, expected 6, to be read on-chain. | Circle docs |
 | Splits and dividends | Applied through a multiplier. Raw `balanceOf` does not change. When an action happens, the feed freezes and resumes only after both the price and multiplier update. | Base and Chainlink docs |
@@ -26,7 +26,8 @@ A real version looks feasible, and the pool's design already matches the real fe
 | `uiMultiplier()` and `effectiveAt()` on the stock token | Documented on B20 | Good. Void on a multiplier change already works this way. |
 | `answer > 0` | Overnight feed can report zero | Good. A zero answer is rejected. |
 | First fresh print after open settles the night | Feed is silent over the weekend and resumes at the first print | Works, but see decision 1. |
-| Staleness bound `refMaxAge` | Heartbeats unpublished, no off-hours updates | Needs a real value. The 1 day used on testnet is a placeholder. |
+| Staleness bound `refMaxAge` | 24 h heartbeat, so a quiet price can go a full day without a new print | The 1 day on testnet is the right order, but a price can be exactly that old and still be correct. Needs care with the buy-time check. |
+| First fresh print after open arrives within `printWindow` (120 s on testnet) | A feed only updates on a 0.5% move or the 24 h heartbeat | At risk. If the price stays within 0.5% after the resume, no print arrives in a short window and the night voids (fees refunded). The probe measures how often this happens. |
 | Pays out USDC only | USDC can blacklist or pause addresses | Already handled: a failed payout falls back to a claimable balance. |
 | Pool never holds the stock | Policies can block addresses | Good. The pool only reads holders' balances. |
 
@@ -55,4 +56,4 @@ A real version looks feasible, and the pool's design already matches the real fe
 - The feed address table did not load from the Chainlink page, so the NVDA feed address is still to be copied from it.
 - Token addresses, and whether a testnet token or feed exists, are unconfirmed.
 - Whether smart contracts are allowed to hold these tokens is not addressed in the docs. The pool does not need to hold them, but a launch partner may ask.
-- Heartbeat, deviation and real decimals values.
+- Real decimals of the token, and the actual (not documented) update behaviour right after the weekend resume.
