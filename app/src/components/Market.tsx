@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CHAIN, DEPLOYED, DEMO_TOKENS, TICKER, need } from "@/lib/config";
+import { DEPLOYED, DEMO_TOKENS, TICKER, need } from "@/lib/config";
 import { friendlyError } from "@/lib/friendly";
 import { POOL_ABI, STOCK_ABI, USDC_ABI } from "@/lib/abis";
-import { ensureAllowance, phaseOf, secondsLeft, send } from "@/lib/chain";
+import { phaseOf, secondsLeft, send } from "@/lib/chain";
 import { fmtPx, fmtTokens, fmtUsd, notionalOf, parseTokens, premiumOf } from "@/lib/math";
 import { readMyCovers, STATE_TEXT, type MyCover } from "@/lib/covers";
 import { useApp } from "./state";
@@ -18,8 +18,6 @@ export default function Market() {
   const { snap, signer, setWalletOpen, wrongNetwork, switchNetwork, refresh } = useApp();
   const [tokens, setTokens] = useState("100");
   const [tierIdx, setTierIdx] = useState(1);
-  const [step, setStep] = useState<null | "approve" | "buy">(null);
-  const [done, setDone] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [covers, setCovers] = useState<MyCover[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -72,12 +70,10 @@ export default function Market() {
 
   const me = snap?.me;
   const left = snap && view ? secondsLeft(snap, view.phase.target) : null;
-  const sale = view?.phase.phase === "sale";
 
   async function act(fn: () => Promise<void>) {
     setBusy(true);
     setErr(null);
-    setDone(null);
     try {
       await fn();
     } catch (e) {
@@ -85,21 +81,10 @@ export default function Market() {
       setErr(friendlyError(m));
     } finally {
       setBusy(false);
-      setStep(null);
       setReload((n) => n + 1);
       void refresh();
     }
   }
-
-  const buy = () =>
-    act(async () => {
-      if (!signer || !snap || !view) return;
-      setStep("approve");
-      await ensureAllowance(signer, view.premium);
-      setStep("buy");
-      const r = await send(signer, need("pool"), POOL_ABI, "buyCover", [snap.activeId, view.raw, tierIdx]);
-      setDone(r.transactionHash);
-    });
 
   const faucet = () =>
     act(async () => {
@@ -108,25 +93,7 @@ export default function Market() {
       await send(signer, need("stock"), STOCK_ABI, "mint", [signer.address, DEMO_TOKENS]);
     });
 
-  // primary action state
-  let cta: { label: string; onClick?: () => void; disabled?: boolean; note?: string } = { label: "…", disabled: true };
-  if (!signer) cta = { label: "Connect", onClick: () => setWalletOpen(true) };
-  else if (wrongNetwork) cta = { label: "Switch network", onClick: () => void switchNetwork() };
-  else if (!snap || !view || !me) cta = { label: "Loading", disabled: true };
-  else if (!sale)
-    cta =
-      view.phase.phase === "idle"
-        ? { label: "Protection isn't open yet", disabled: true, note: "You can buy protection only during a night's sale window, and none is open right now. You can still subscribe below." }
-        : { label: "Too late for this night", disabled: true, note: "The market has closed for this night, so protection can no longer be bought for it. Wait for the next night to open, or subscribe below." };
-  else if (view.raw === 0n) cta = { label: "Enter an amount", disabled: true };
-  else if (view.raw > me.tokens) cta = { label: "Not enough stocks", disabled: true, note: `You have ${fmtTokens(me.tokens)}.` };
-  else if (view.premium > me.usdc) cta = { label: "Not enough test dollars", disabled: true, note: `The fee is $${fmtUsd(view.premium)}.` };
-  else if (view.notional < 10_000_000n) cta = { label: "Minimum is $10", disabled: true };
-  else if (busy) cta = { label: step === "approve" ? "Approve (1 of 2)…" : "Confirm (2 of 2)…", disabled: true };
-  else cta = { label: `Protect · fee $${fmtUsd(view.premium)}`, onClick: () => void buy() };
-
   const lowFunds = !!me && (me.usdc < 100n * 10n ** 6n || me.tokens < DEMO_TOKENS);
-  const txUrl = done && CHAIN.blockExplorers ? `${CHAIN.blockExplorers.default.url}/tx/${done}` : null;
 
   return (
     <section className="market">
@@ -144,21 +111,21 @@ export default function Market() {
       </aside>
 
       <div className="stage">
-        <p className="meta">Overnight protection</p>
+        <p className="meta">Weekend protection</p>
         <h1 className="display display--md">
           <span className="display__row">Protect your stocks</span>
-          <span className="display__row display__row--outline">overnight.</span>
+          <span className="display__row display__row--outline">every weekend.</span>
         </h1>
         <p className="lede lede--wide">
-          Pay a small fee. If your stock opens much lower tomorrow, we pay you part of the loss.
+          Pay a small fee each weekend. If your stock opens much lower on Monday, we pay you part of the loss. You subscribe once and it renews by itself.
         </p>
         <Explainer tier={view?.tier} tierName={view?.tier.name} />
         <details className="lede lede--wide">
           <summary className="meta">Questions</summary>
-          <p className="meta"><b>When can I buy?</b> Before the market closes, with a short cut-off just before. Once it is closed, it is too late. News that comes out after that is not covered.</p>
+          <p className="meta"><b>When does it start?</b> On the second weekend after you subscribe, so nobody can join just before bad news. News that comes out after the market closes is not covered.</p>
           <p className="meta"><b>Is it for me?</b> Only if a surprise drop overnight would really hurt, like holding through earnings. It is not a way to make money.</p>
           <p className="meta"><b>What if the stock goes up?</b> You lose only the fee and keep the gain.</p>
-          <p className="meta"><b>How long does it last?</b> One night. A weekend counts as one night. Buy again to stay protected.</p>
+          <p className="meta"><b>How long does it last?</b> Each weekend is covered separately and renews by itself. Cancel any time, and one more weekend is still covered. If you cannot pay one week, that weekend is not covered and you owe nothing.</p>
           <p className="meta"><b>What is not covered?</b> Drops during the day, and the first part of a drop (you take that). If something unusual happens, like a stock split, we cancel and refund your fee.</p>
           <p className="meta"><b>Is this real?</b> No. Practice stocks, play money, and a made-up price anyone can change. A real version would use a trusted market price.</p>
         </details>
@@ -202,7 +169,7 @@ export default function Market() {
               <dl className="rows">
                 <div><dt>Stocks</dt><dd>{fmtTokens(view.raw)} × ${fmtPx(snap!.feedPrice)}</dd></div>
                 <div><dt>Worth</dt><dd>${fmtUsd(view.notional)}</dd></div>
-                <div><dt>Fee</dt><dd>${fmtUsd(view.premium)}</dd></div>
+                <div><dt>Fee each weekend</dt><dd>${fmtUsd(view.premium)}</dd></div>
                 <div><dt>Most we pay</dt><dd>${fmtUsd(view.maxPayout)}</dd></div>
               </dl>
             )}
@@ -211,20 +178,13 @@ export default function Market() {
 
         <div className="cta">
           <FeeMoneyNote />
-          <MagneticButton label={cta.label} onClick={cta.onClick} disabled={cta.disabled} />
-          {cta.note && <p className="meta">{cta.note}</p>}
           {lowFunds && signer && !wrongNetwork && (
             <p className="meta">
               Need practice money? <button className="linkbtn" disabled={busy} onClick={() => void faucet()}>Get it free</button>
             </p>
           )}
-          {!sale && snap && !snap.session && (
-            <p className="meta">No night is open yet. In this practice version you start one on the <a className="linkbtn" href="/demo">Demo page</a>.</p>
-          )}
-          {done && (
-            <p className="meta ok">
-              Done. You are protected. {txUrl ? <a className="linkbtn" href={txUrl} target="_blank" rel="noreferrer">Receipt</a> : null}
-            </p>
+          {!snap?.session && snap && (
+            <p className="meta">Protection is bought for each weekend. In this practice version you start a night on the <a className="linkbtn" href="/demo">Demo page</a>.</p>
           )}
           {err && <p className="meta warn">{err}</p>}
         </div>
