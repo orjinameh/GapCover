@@ -11,6 +11,8 @@ import {SafeTransfer} from "./libs/SafeTransfer.sol";
 /// Holders buy cover before the close. At the next open anyone settles from the last in-session
 /// feed price against the first fresh post-open feed price. A frozen feed cannot settle.
 /// Terms are immutable. There is no owner, pause or upgrade. TESTNET ONLY, not audited.
+/// The pool shares are a standard ERC-20 token (gGAP): minted on deposit, burned on withdrawal, freely
+/// transferable. Its price is the pool's assets divided by the supply, so fees raise it and payouts lower it.
 contract CoverPool {
     using SafeTransfer for IERC20;
 
@@ -84,8 +86,9 @@ contract CoverPool {
     uint256 public sessionCount;
     uint256 public activeSession; // id of the non terminal session, 0 if none
 
-    mapping(address => uint256) public shares;
-    uint256 public totalShares;
+    mapping(address => uint256) public shares; // ERC-20 balances
+    uint256 public totalShares; // ERC-20 total supply
+    mapping(address => mapping(address => uint256)) public allowance;
     mapping(address => uint256) public claimable;
     uint256 public pendingClaims;
 
@@ -101,6 +104,8 @@ contract CoverPool {
     event PayoutDeferred(address indexed holder, uint256 amount);
     event Claimed(address indexed holder, uint256 amount);
     event Deposited(address indexed from, address indexed to, uint256 assets, uint256 shares);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
     event Withdrawn(address indexed owner, address indexed to, uint256 assets, uint256 shares);
 
     error Reentrancy();
@@ -130,6 +135,8 @@ contract CoverPool {
     error NotVoidable();
     error NothingToClaim();
     error InsufficientShares();
+    error InsufficientAllowance();
+    error BadRecipient();
 
     modifier nonReentrant() {
         if (_lock != 1) revert Reentrancy();
@@ -227,6 +234,45 @@ contract CoverPool {
         return ((totalAssets() + 1) * VIRTUAL_SHARES * WAD) / (totalShares + VIRTUAL_SHARES);
     }
 
+    // ----------------------------------------------------- gGAP token (ERC-20)
+
+    function name() external pure returns (string memory) { return "GapCover liquidity share"; }
+    function symbol() external pure returns (string memory) { return "gGAP"; }
+    /// Three more decimals than the asset, because shares start at 1000 per smallest asset unit.
+    function decimals() external view returns (uint8) { return assetDecimals + 3; }
+    function totalSupply() external view returns (uint256) { return totalShares; }
+    function balanceOf(address a) external view returns (uint256) { return shares[a]; }
+
+    function approve(address spender, uint256 value) external returns (bool) {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    function transfer(address to, uint256 value) external returns (bool) {
+        _move(msg.sender, to, value);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 value) external returns (bool) {
+        uint256 a = allowance[from][msg.sender];
+        if (a != type(uint256).max) {
+            if (a < value) revert InsufficientAllowance();
+            allowance[from][msg.sender] = a - value;
+        }
+        _move(from, to, value);
+        return true;
+    }
+
+    /// Moving shares is allowed while the pool is locked. Only deposit and withdraw wait for the lock.
+    function _move(address from, address to, uint256 value) internal {
+        if (to == address(0)) revert BadRecipient();
+        if (shares[from] < value) revert InsufficientShares();
+        shares[from] -= value;
+        shares[to] += value;
+        emit Transfer(from, to, value);
+    }
+
     function deposit(uint256 assets, address to) external nonReentrant returns (uint256 minted) {
         if (locked()) revert PoolLocked();
         if (assets == 0) revert ZeroAmount();
@@ -234,6 +280,7 @@ contract CoverPool {
         if (minted == 0) revert ZeroShares();
         shares[to] += minted;
         totalShares += minted;
+        emit Transfer(address(0), to, minted);
         asset.safeTransferFrom(msg.sender, address(this), assets);
         emit Deposited(msg.sender, to, assets, minted);
     }
@@ -245,6 +292,7 @@ contract CoverPool {
         assets = convertToAssets(shares_);
         shares[msg.sender] -= shares_;
         totalShares -= shares_;
+        emit Transfer(msg.sender, address(0), shares_);
         asset.safeTransfer(to, assets);
         emit Withdrawn(msg.sender, to, assets, shares_);
     }
