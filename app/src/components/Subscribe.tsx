@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import type { Abi } from "viem";
 import { need } from "@/lib/config";
 import { friendlyError } from "@/lib/friendly";
 import { POOL_ABI } from "@/lib/abis";
@@ -23,7 +24,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
     if (!addr) { setSub(null); return; }
     let live = true;
     const rd = <T,>(functionName: string, args: readonly unknown[] = []) =>
-      pub.readContract({ address: need("pool"), abi: POOL_ABI, functionName, args }) as Promise<T>;
+      pub.readContract({ address: need("pool"), abi: POOL_ABI as Abi, functionName, args }) as Promise<T>;
     void Promise.all([rd<readonly [boolean, boolean, number, bigint, bigint, bigint]>("subs", [addr]), rd<bigint>("sessionCount")])
       .then(([s, n]) => live && setSub({ active: s[0], tier: Number(s[2]), since: s[3], cancelAfter: s[4], raw: s[5], nights: n }))
       .catch(() => {});
