@@ -5,6 +5,9 @@ import { pub } from "./chain";
 const DEPOSITED = parseAbiItem("event Deposited(address indexed from, address indexed to, uint256 assets, uint256 shares)");
 const WITHDRAWN = parseAbiItem("event Withdrawn(address indexed owner, address indexed to, uint256 assets, uint256 shares)");
 
+const TRANSFER = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
+const ZERO = "0x0000000000000000000000000000000000000000";
+
 /** First block where the pool has code. Cached per tab. */
 async function deployBlock(pool: Address): Promise<bigint> {
   const key = `gc-deploy-${pool}`;
@@ -28,7 +31,8 @@ async function deployBlock(pool: Address): Promise<bigint> {
 
 /**
  * Money this person put in minus money they took out, from the pool's own events.
- * Returns null if the RPC can't serve the logs (the page then hides the row).
+ * Returns null if the RPC can't serve the logs, or if gGAP was sent to or from this wallet by another
+ * wallet (deposits and withdrawals alone then no longer tell the story), so the page hides the row.
  */
 export async function readNetDeposits(me: Address): Promise<bigint | null> {
   try {
@@ -39,10 +43,13 @@ export async function readNetDeposits(me: Address): Promise<bigint | null> {
     let net = 0n;
     for (; from <= latest; from += STEP) {
       const to = from + STEP - 1n > latest ? latest : from + STEP - 1n;
-      const [d, w] = await Promise.all([
+      const [d, w, tin, tout] = await Promise.all([
         pub.getLogs({ address: pool, event: DEPOSITED, args: { to: me }, fromBlock: from, toBlock: to }),
         pub.getLogs({ address: pool, event: WITHDRAWN, args: { owner: me }, fromBlock: from, toBlock: to }),
+        pub.getLogs({ address: pool, event: TRANSFER, args: { to: me }, fromBlock: from, toBlock: to }),
+        pub.getLogs({ address: pool, event: TRANSFER, args: { from: me }, fromBlock: from, toBlock: to }),
       ]);
+      if (tin.some((l) => l.args.from !== ZERO) || tout.some((l) => l.args.to !== ZERO)) return null;
       for (const l of d) net += l.args.assets ?? 0n;
       for (const l of w) net -= l.args.assets ?? 0n;
     }

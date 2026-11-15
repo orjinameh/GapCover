@@ -62,13 +62,13 @@ export default function Underwrite() {
   if (!signer) dep = { label: "Connect", onClick: () => setWalletOpen(true) };
   else if (wrongNetwork) dep = { label: "Switch network", onClick: () => void switchNetwork() };
   else if (snap && me) {
-    if (snap.locked) dep = { label: "Locked for now", disabled: true };
+    if (snap.locked) dep = { label: "Buying paused for now", disabled: true };
     else if (a === 0n) dep = { label: "Enter an amount", disabled: true };
     else if (a > me.usdc) dep = { label: "Not enough test dollars", disabled: true };
     else if (busy) dep = { label: "Confirm…", disabled: true };
     else
       dep = {
-        label: `Add $${fmtUsd(a)}`,
+        label: `Buy $${fmtUsd(a)} of gGAP`,
         onClick: () =>
           void act("Deposit", async () => {
             await ensureAllowance(signer, a);
@@ -82,19 +82,21 @@ export default function Underwrite() {
       <aside className="rail">
         <p className="meta">Provide liquidity</p>
         <p className="lede">
-          Add money that pays people when their stock drops. Earn their fees. Big drop? You can lose some of your money.
+          gGAP is your share of the money that pays people when their stock drops. Its price rises from their fees. In a big drop it falls.
         </p>
       </aside>
       <div className="stage">
         <p className="meta">{snap?.locked ? "Locked while protection is active" : "Open: add or take out money"}</p>
         <h1 className="display display--md">
-          <span className="display__row">Earn from</span>
-          <span className="display__row display__row--outline">the fees.</span>
+          <span className="display__row">Buy</span>
+          <span className="display__row display__row--outline">gGAP.</span>
         </h1>
 
         <PoolFlow />
 
         <dl className="rows">
+          <div><dt>gGAP price</dt><dd>${snap ? (Number(snap.sharePrice) / 1e18).toFixed(4) : "…"}</dd></div>
+          <div><dt>Your gGAP</dt><dd>{me ? (Number(me.shares) / 1e9).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "Connect to see"}</dd></div>
           <div><dt>Money in the pool</dt><dd>${snap ? fmtUsd(snap.totalAssets) : "…"}</dd></div>
           <div><dt>Free to use</dt><dd>{snap ? `$${fmtUsd(free)}` : "…"}</dd></div>
           <div><dt>Held back for payouts</dt><dd>{snap ? `$${fmtUsd(held)}` : "…"} · {util.toFixed(0)}%</dd></div>
@@ -107,7 +109,7 @@ export default function Underwrite() {
 
         <div className="flow">
           <div className="flow__step">
-            <p className="meta">Amount to add, in dollars{me ? ` · you have $${fmtUsd(me.usdc)}` : ""}</p>
+            <p className="meta">Dollars to spend on gGAP{me ? ` · you have $${fmtUsd(me.usdc)}` : ""}</p>
             <label className="field-in">
               <input aria-label="Amount to deposit" value={amount} inputMode="decimal" onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} />
             </label>
@@ -117,7 +119,7 @@ export default function Underwrite() {
         {me && me.shares > 0n && (
           <div className="flow">
             <div className="flow__step">
-              <p className="meta">Amount to take out, in dollars</p>
+              <p className="meta">Dollars of gGAP to sell</p>
               <label className="field-in">
                 <input aria-label="Amount to withdraw" value={out} placeholder="0" inputMode="decimal" onChange={(e) => setOut(e.target.value.replace(/[^0-9.]/g, ""))} />
               </label>
@@ -137,7 +139,7 @@ export default function Underwrite() {
             {signer && !wrongNetwork && me && me.shares > 0n && o > 0n && (
               <MagneticButton
                 small
-                label={`Take out $${fmtUsd(o >= me.shareValue ? me.shareValue : o)}`}
+                label={`Sell $${fmtUsd(o >= me.shareValue ? me.shareValue : o)}`}
                 disabled={busy || !!snap?.locked || outShares === 0n}
                 onClick={() => void act("Withdrawal", async () => { await send(signer, need("pool"), POOL_ABI, "withdraw", [outShares, signer.address]); setOut(""); })}
               />
@@ -145,7 +147,7 @@ export default function Underwrite() {
             {signer && !wrongNetwork && me && me.shares > 0n && (
               <MagneticButton
                 small
-                label="Take out all"
+                label="Sell all"
                 disabled={busy || !!snap?.locked}
                 onClick={() => void act("Withdrawal", async () => { await send(signer, need("pool"), POOL_ABI, "withdraw", [me.shares, signer.address]); })}
               />
@@ -157,7 +159,7 @@ export default function Underwrite() {
           {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
         </div>
         <div className="meta field__legal">
-          <p><b>Risk:</b> you can lose some or all of this money. It is locked while protection is active.</p>
+          <p><b>Risk:</b> gGAP can lose value, and in a market crash it can lose a lot at once. Selling is paused while protection is active.</p>
           <p><b>Practice version:</b> play money, nothing here is real. Not advice.</p>
         </div>
       </div>
