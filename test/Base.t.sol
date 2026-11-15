@@ -61,7 +61,7 @@ abstract contract Base is Test {
     }
 
     function _params(uint16 maxCovers) internal pure returns (CoverPool.Params memory) {
-        return CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, maxCovers, 10e6);
+        return CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, maxCovers, 10e6, 10_000, 10_000);
     }
 
     function _usdcI() internal view returns (IERC20) { return IERC20(address(usdc)); }

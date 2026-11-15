@@ -32,6 +32,8 @@ contract CoverPool {
         uint32 lockWindow; // closeSession allowed from close until close + lockWindow
         uint16 maxCovers; // covers per session, bounds the settle loop
         uint128 minNotional; // in asset units
+        uint16 maxUseBps; // most of the pool one night may reserve for payouts, 10_000 = no limit
+        uint16 maxHolderBps; // most of the pool one wallet may reserve for payouts in one night, 10_000 = no limit
     }
 
     struct Session {
@@ -86,6 +88,9 @@ contract CoverPool {
     uint256 public sessionCount;
     uint256 public activeSession; // id of the non terminal session, 0 if none
 
+    mapping(uint256 => mapping(address => uint256)) public holderReserved; // session => wallet => reserved payout
+    bool public salesPaused; // stops new cover only. Deposits, withdrawals, settlement and refunds never stop.
+
     mapping(address => uint256) public shares; // ERC-20 balances
     uint256 public totalShares; // ERC-20 total supply
     mapping(address => mapping(address => uint256)) public allowance;
@@ -104,6 +109,7 @@ contract CoverPool {
     event PayoutDeferred(address indexed holder, uint256 amount);
     event Claimed(address indexed holder, uint256 amount);
     event Deposited(address indexed from, address indexed to, uint256 assets, uint256 shares);
+    event SalesPausedSet(bool paused);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Withdrawn(address indexed owner, address indexed to, uint256 assets, uint256 shares);
@@ -136,6 +142,9 @@ contract CoverPool {
     error NothingToClaim();
     error InsufficientShares();
     error InsufficientAllowance();
+    error SalesPaused();
+    error PoolUseLimit();
+    error HolderLimit();
     error BadRecipient();
 
     modifier nonReentrant() {
@@ -148,6 +157,7 @@ contract CoverPool {
     constructor(IERC20 asset_, IB20Stock stock_, IAggregatorV3 feed_, address keeper_, Params memory params, Tier[] memory tiers_) {
         if (address(asset_) == address(0) || address(stock_) == address(0) || address(feed_) == address(0)) revert BadConfig();
         if (params.maxCovers == 0 || params.printWindow == 0 || params.refMaxAge == 0) revert BadConfig();
+        if (params.maxUseBps == 0 || params.maxUseBps > 10_000 || params.maxHolderBps == 0 || params.maxHolderBps > 10_000) revert BadConfig();
         if (tiers_.length == 0 || tiers_.length > 8) revert BadConfig();
         for (uint256 i; i < tiers_.length; ++i) {
             Tier memory t = tiers_[i];
@@ -199,6 +209,13 @@ contract CoverPool {
         });
         activeSession = id;
         emit SessionScheduled(id, saleStart, closeTime, openTime);
+    }
+
+    /// The keeper can stop NEW cover from being sold. It cannot touch money, block withdrawals or block settlement.
+    function setSalesPaused(bool paused) external {
+        if (msg.sender != keeper) revert NotKeeper();
+        salesPaused = paused;
+        emit SalesPausedSet(paused);
     }
 
     function cancelSession(uint256 id) external {
@@ -301,6 +318,7 @@ contract CoverPool {
 
     function buyCover(uint256 id, uint256 rawAmount, uint8 tier) external nonReentrant returns (uint256 coverId) {
         Session storage s = sessions[id];
+        if (salesPaused) revert SalesPaused();
         if (s.status != Status.Scheduled) revert SessionNotActive();
         if (block.timestamp < s.saleStart || block.timestamp + p.buyCutoff > s.closeTime) revert SaleClosed();
         if (tier >= tiers.length) revert BadTier();
@@ -321,6 +339,7 @@ contract CoverPool {
         uint256 premium = (notional * t.premiumBps + 9_999) / 10_000;
         if (notional > type(uint128).max) revert CapacityExceeded();
         if (uint256(s.reserved) + maxPayout > totalAssets() + premium) revert CapacityExceeded();
+        _checkLimits(id, s.reserved, maxPayout);
 
         coverId = covers[id].length;
         covers[id].push(Cover(msg.sender, tier, uint128(notional), uint128(premium), uint128(maxPayout)));
@@ -330,6 +349,15 @@ contract CoverPool {
         s.coverCount += 1;
         asset.safeTransferFrom(msg.sender, address(this), premium);
         emit CoverBought(id, coverId, msg.sender, tier, rawAmount, notional, premium, maxPayout);
+    }
+
+    /// Night-wide and per-wallet share-of-pool limits. Records the wallet's reserved payout.
+    function _checkLimits(uint256 id, uint256 reservedNow, uint256 maxPayout) internal {
+        uint256 assetsNow = totalAssets();
+        if (reservedNow + maxPayout > (assetsNow * p.maxUseBps) / 10_000) revert PoolUseLimit();
+        uint256 mine = holderReserved[id][msg.sender] + maxPayout;
+        if (mine > (assetsNow * p.maxHolderBps) / 10_000) revert HolderLimit();
+        holderReserved[id][msg.sender] = mine;
     }
 
     function claim() external nonReentrant returns (uint256 amount) {

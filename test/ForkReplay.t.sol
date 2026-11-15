@@ -71,7 +71,7 @@ contract ForkReplayTest is Test {
             IB20Stock(address(token)),
             IAggregatorV3(NVDA_FEED),
             address(this),
-            CoverPool.Params(7 days, 2 hours, 6 hours, 10 minutes, 1 hours, 64, 10e6),
+            CoverPool.Params(7 days, 2 hours, 6 hours, 10 minutes, 1 hours, 64, 10e6, 10_000, 10_000),
             t
         );
 
