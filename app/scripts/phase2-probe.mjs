@@ -115,7 +115,7 @@ if (rounds.length > 1) {
     n++;
     const fri = asc[i - 1], sun = asc[i];
     let mon = null;
-    for (let j = i; j < asc.length; j++) { const t = parts(asc[j].at); if (t.wd !== "Sun" && t.mins >= 9 * 60 + 30) { mon = asc[j]; break; } }
+    for (let j = parts(sun.at).wd !== "Sun" ? i + 1 : i; j < asc.length; j++) { const t = parts(asc[j].at); if (t.wd !== "Sun" && t.mins >= 9 * 60 + 30) { mon = asc[j]; break; } }
     const pay = (drop) => (drop > 2 ? Math.min(drop - 2, 10) * 100 : 0);
     const chg = (r) => ((px(fri) - px(r)) / px(fri)) * 100;
     console.log(`  Weekend ${n}: last print ${when(fri.at)} at $${px(fri).toFixed(2)}`);

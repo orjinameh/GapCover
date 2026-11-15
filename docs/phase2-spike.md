@@ -2,25 +2,40 @@
 
 Date: 15 Nov 2026. Desk research from current Base and Chainlink docs. No code was run against a live network (the sandbox has no chain access), so everything on-chain below is **unverified until the read-only script in "Next steps" runs**.
 
-## Measured on Base mainnet (probe run, 15 Nov 2026)
+## Measured on Base mainnet (probe runs, 15 Nov 2026)
 
-Read-only calls against the real NVDA feed `0x04689a41629776563E6822F76f2e57D148d28513` and token `0xb20000000000000000000078ee7ce2fE4908108C`. About one week of prices (400 rounds, 6 to 13 Nov).
+Read-only calls against the real NVDA feed `0x04689a41629776563E6822F76f2e57D148d28513` and token `0xb20000000000000000000078ee7ce2fE4908108C`. 1,200 rounds, 19 Aug to 13 Nov: **12 weekends**.
 
 | Item | Measured |
 |---|---|
 | Real USDC | 6 decimals |
-| NVDAc token | 8 decimals (not the 18 that Base's docs recommend), supply about 49,256 tokens, multiplier 1.000538, no pending update |
-| Feed | 8 decimals, last print Fri 13 Nov 18:36 ET, silent all weekend as documented |
-| Typical update gap | median 10 minutes. Overnight and post-market gaps of 2 to 4 hours happen. |
-| Weekend gap | last print Fri 6 Nov 16:39 ET, first print Sun 8 Nov 20:00 ET (2 days 3 hours) |
-| Bad prints | none (no zero or negative answers in the sample) |
+| NVDAc token | 8 decimals (not the 18 Base's docs recommend), supply about 49,256 tokens, multiplier 1.000538, no pending update |
+| Feed | 8 decimals, silent all weekend as documented, no zero or negative prints in 1,200 rounds |
+| Typical update gap | median 21 minutes |
 | Sequencer uptime feed | answered "up" (0) since 26 Jun, so the address in the probe looks right |
+| First print after the weekend | at 20:00 ET (to the minute) in **all 12 weekends**. On the Labor Day weekend it came Monday 20:00 ET. |
+| Last print before the weekend | between 11:17 and 16:39 ET on Fridays, not at the close. Weekends ran 2 days 5 hours to 3 days 6 hours. |
 
-**The Nvidia weekend (8 to 9 Nov) in the feed:** the first print after the resume (Sun 20:00 ET) moved -2.62%. The next-largest move was -1.79% at the Monday 09:30 ET open. Together that is about -4.4%, close to the "about 5% lower" in the news. So settling on the Sunday print would have caught only about 60% of the drop. The probe does not show the prints in between, so this is indicative. The upgraded probe prints the full table.
+**The Nvidia weekend (6 to 9 Nov), from the feed:**
 
-Illustration for a Standard cover on $10,000 (you take the first 2%): a -2.62% settle pays about $62. A -4.4% settle pays about $240. Same cover, same weekend.
+| Print | Price | Change vs Friday | Standard cover on $10,000 pays |
+|---|---|---|---|
+| Friday last print, 16:39 ET | $187.97 | | |
+| First print after resume, Sun 20:00 ET | $183.03 | -2.62% | about $62 |
+| First print from Mon 09:30 ET | $170.81 | **-9.13%** | about **$713** |
 
-**Limits of this sample:** one weekend only, so it cannot say how often the first print arrives right at the Sunday resume. It did here, at exactly 20:00. Run the upgraded probe (it reads about seven weeks) before relying on it.
+The price kept falling through Sunday night and pre-market. Settling on the Sunday print would have caught under a tenth of the payout. **The Protect page's Nvidia example says "opened about 5% lower" and "closed Friday at $186.64". The feed shows about -9.1% by the Monday 09:30 print and a last Friday print of $187.97.** The 5% came from news reports. The feed prices the token, including early trading, so the two can differ. The page needs a decision (see below).
+
+**Across all 12 weekends (Standard cover, $60 fee per $10,000 each weekend, $720 in total):**
+
+| Settle on | Weekends that pay | Total paid out |
+|---|---|---|
+| Sunday 20:00 ET print | 1 of 12 | $62 |
+| Monday 09:30 ET print | 2 of 12 | $850 (one weekend is $713 of it) |
+
+On the Monday rule, this sample pays out more than the fees collected. One event dominates, and 12 weekends is a small sample, so this is a warning and not a conclusion. Prices rose in most weekends, which pay nothing.
+
+**What the data settles:** the worry that the first print might not arrive after the resume is mostly gone, since all 12 weekends printed at 20:00 ET. A weekend's Friday reference print can be hours before the close, but the feed only skips prints for moves under 0.5%, so the reference error is small next to a 2% deductible. The resume time moves on holidays, so the keeper needs a market calendar.
 
 ## Verdict
 
@@ -53,7 +68,7 @@ A real version looks feasible, and the pool's design already matches the real fe
 
 ## Decisions needed
 
-1. **What counts as the open.** (The measured Nvidia weekend above makes this the most important decision: the two candidates pay about $62 versus about $240.) The feed resumes Sunday 20:00 ET with a smoothed overnight value, not at the Monday 09:30 open. A drop like the Nvidia case (news on Sunday, lower open on Monday) may only be partly in the Sunday print. Options: settle on the first print after Sunday 20:00 (simple, but smoothed), or on the first print after Monday 09:30 (matches what traders call the open, but the cover then spans Sunday night trading). This changes who wins and loses, so it is a product decision, not just a technical one.
+1. **What counts as the open.** (The measured Nvidia weekend above makes this the most important decision: the two candidates pay about $62 versus about $713.) The feed resumes Sunday 20:00 ET with a smoothed overnight value, not at the Monday 09:30 open. A drop like the Nvidia case (news on Sunday, lower open on Monday) may only be partly in the Sunday print. Options: settle on the first print after Sunday 20:00 (simple, but smoothed), or on the first print after Monday 09:30 (matches what traders call the open, but the cover then spans Sunday night trading). This changes who wins and loses, so it is a product decision, not just a technical one.
 2. **Overnight cover.** Weekdays have no clean overnight gap in a 24/5 feed. The overnight session trades and is smoothed. The clean, honest product today is the **weekend gap**, Friday 20:00 to Sunday 20:00 ET. A weekday overnight product needs the same decision as above and more careful pricing.
 3. **Where to test.** With no Base Sepolia feed documented, the options are a mainnet fork (free, no real money), a read-only script against mainnet, and a separate small mock of the real feed's quirks (zeros, silence, freezes).
 4. **Eligibility.** The tokens are for people outside the U.S. The footer already says "Not for U.S. residents", but a real launch needs a real jurisdiction check. That is a legal question.
