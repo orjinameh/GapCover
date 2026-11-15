@@ -51,6 +51,18 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
   const waiting = !!sub && sub.active && sub.nights < firstNight;
   const weeksToStart = sub ? Number(firstNight - sub.nights) : 0;
   const ready = !!signer && !wrongNetwork && !!snap?.me;
+  const have = snap?.me?.tokens ?? 0n;
+  const why = !signer
+    ? "Connect to subscribe."
+    : wrongNetwork
+      ? "Switch to the right network to subscribe."
+      : !snap?.me
+        ? "Loading your account…"
+        : raw === 0n
+          ? "Enter how many stocks to protect, above."
+          : raw > have
+            ? `You have ${fmtTokens(have)} stocks and are trying to protect ${fmtTokens(raw)}. Lower the amount, or get practice money above.`
+            : null;
 
   return (
     <div className="mine">
@@ -75,7 +87,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
         {ready && !running && (
           <MagneticButton
             small
-            label={raw > 0n ? `Subscribe · about $${fmtUsd(premium)} a weekend` : "Enter an amount above"}
+            label={raw > 0n ? `Subscribe · about $${fmtUsd(premium)} a weekend` : "Subscribe"}
             disabled={busy || raw === 0n || raw > (snap?.me?.tokens ?? 0n)}
             onClick={() =>
               void act(async () => {
@@ -90,6 +102,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
           <MagneticButton small label="Cancel subscription" disabled={busy} onClick={() => void act(async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "cancelSubscription"); }, "Cancelled.")} />
         )}
       </div>
+      {!running && why && <p className="meta warn">{why}</p>}
       <p className="meta">Subscribing lets the pool take each weekend&apos;s fee from your account. You can stop it any time by cancelling here, or by removing the permission in your wallet.</p>
       {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
     </div>
