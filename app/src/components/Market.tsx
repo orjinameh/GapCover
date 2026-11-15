@@ -113,7 +113,11 @@ export default function Market() {
   if (!signer) cta = { label: "Connect", onClick: () => setWalletOpen(true) };
   else if (wrongNetwork) cta = { label: "Switch network", onClick: () => void switchNetwork() };
   else if (!snap || !view || !me) cta = { label: "Loading", disabled: true };
-  else if (!sale) cta = { label: "Not on sale right now", disabled: true, note: "You can buy while the market is open." };
+  else if (!sale)
+    cta =
+      view.phase.phase === "idle"
+        ? { label: "Protection isn't open yet", disabled: true, note: "You can buy protection only during a night's sale window, and none is open right now. You can still subscribe below." }
+        : { label: "Too late for this night", disabled: true, note: "The market has closed for this night, so protection can no longer be bought for it. Wait for the next night to open, or subscribe below." };
   else if (view.raw === 0n) cta = { label: "Enter an amount", disabled: true };
   else if (view.raw > me.tokens) cta = { label: "Not enough stocks", disabled: true, note: `You have ${fmtTokens(me.tokens)}.` };
   else if (view.premium > me.usdc) cta = { label: "Not enough test dollars", disabled: true, note: `The fee is $${fmtUsd(view.premium)}.` };
@@ -215,7 +219,7 @@ export default function Market() {
             </p>
           )}
           {!sale && snap && !snap.session && (
-            <p className="meta">Nothing is on sale yet. Start one on the <a className="linkbtn" href="/demo">Demo page</a>.</p>
+            <p className="meta">No night is open yet. In this practice version you start one on the <a className="linkbtn" href="/demo">Demo page</a>.</p>
           )}
           {done && (
             <p className="meta ok">
