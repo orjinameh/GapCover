@@ -122,3 +122,13 @@ BASE_RPC=https://mainnet.base.org forge test --match-path test/ForkReplay.t.sol 
 Same stand-in token as above. Only the purchase and the close read "the latest round", so those two are pointed at the real Friday round with a mock call. Settlement uses no mock.
 
 **Result (15 Nov 2026, both tests pass):** Friday last print $187.97. Settling on the Monday 09:30 ET print ($170.81) paid **$712.69** on a $10,000 Standard cover, against $60.00 of fees. Settling on the Sunday 20:00 ET resume print ($183.03) paid **$62.46**. Both match the separate maths within $2, and the pool accepted the real round ids as the first print after the open.
+
+## Fee backtest
+
+`app/scripts/fee-backtest.mjs` runs the three protection levels over years of real weekend price gaps (previous close to next open, any gap of 3+ days). It reports, per level: how often it pays, the average payout, the loss ratio (paid / fees), the fee that would break even, the fee that would leave a 30% margin, the worst four weekends in a row, and the result by year. It reads daily price files you download (Date, Open, Close columns; Yahoo, Stooq and Nasdaq formats work).
+
+```
+FILES=nvda.csv,tsla.csv node scripts/fee-backtest.mjs > backtest.log 2>&1
+```
+
+It uses price gaps only. It does not model people buying cover when they expect bad news, partner costs, or weekends missing from the file.
