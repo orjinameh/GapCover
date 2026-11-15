@@ -164,3 +164,18 @@ FILES=nvda.csv,tsla.csv,aapl.csv,mstr.csv node scripts/pool-sim.mjs > poolsim.lo
 ```
 
 It assumes buyers always fill the chosen share of the pool, so real returns will be lower. Before any model change is built, the choices (a limit on pool use, a fee that follows risk, a shared pool) should be picked from this output.
+
+### Provider simulation results (15 Nov 2026)
+
+Four stocks (NVDA, TSLA, AAPL, MSTR) as one shared Standard pool, 521 weekends, Nov 2016 to Nov 2026. No gaps in the price files were skipped, so the data is clean. The worst weekends are real crashes: 5 Aug 2024 (NVDA 14%, TSLA 11%, AAPL 9%, MSTR 27%), 16 Mar 2020, 9 Mar 2020 and 7 Apr 2025. **Stocks gap together in a crash, so a shared pool does not protect against a market-wide crash. Only a limit on pool use does.**
+
+| Fee | Pool used | Buyers random: yearly / worst weekend / worst year | Buyers show up before bad weekends: yearly / worst weekend / worst year |
+|---|---|---|---|
+| 0.60% | 10% | +20.9% / -8.5% / +3.6% | +11.6% / -9.4% / -7.4% |
+| 0.60% | 25% | +59.4% / -21.2% / +6.7% | +29.6% / -23.5% / -21.9% |
+| 0.40% | 10% | +9.0% / -8.7% / -6.3% | +0.6% / -9.6% / -16.6% |
+| 0.40% | 25% | +23.1% / -21.7% / -17.8% | -0.1% / -24.0% / -39.9% |
+
+The worst weekend is about 85% to 90% of the share of the pool one night may use, so the pool-use limit is the main dial. A 0.40% fee earns about nothing if buyers show up before bad weekends, so **keep Standard at 0.60%**. This supersedes the earlier fee proposal, which used average payouts only.
+
+Recommendation: limit one night to 10% to 15% of the pool, keep the 0.60% Standard fee, add a per-person cap, a larger minimum cover and a pause switch, and put team or partner money in as first loss. Not tested: demand. A 0.60% weekly fee is about 31% a year for someone who protects every weekend.
