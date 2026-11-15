@@ -110,24 +110,34 @@ contract ForkReplayTest is Test {
         console.log("friday last round, price", uint256(fri.answer));
         console.log("first print at or after open, price", uint256(first.answer));
 
-        // Friday: schedule, then buy $10,000 of Standard protection at the real Friday price.
+        uint256 usdcBefore;
+        (notional, fee, usdcBefore) = _fridayBuy(fri, openTime);
+        _closeAndSettle(fri, first);
+
+        pay = IERC20(USDC).balanceOf(holder) + fee - usdcBefore;
+        assertApproxEqAbs(pay, _expected(notional, uint256(fri.answer), uint256(first.answer)), 2e6, "payout versus independent maths");
+    }
+
+    /// Friday: schedule, then buy $10,000 of Standard protection at the real Friday price.
+    function _fridayBuy(Round memory fri, uint64 openTime) internal returns (uint256 notional, uint256 fee, uint256 usdcBefore) {
         vm.warp(FRI_NOON);
         pool.scheduleSession(FRI_NOON, FRI_CLOSE, openTime);
         _pointLatestAt(fri);
-        uint256 raw = (10_000e6 * 1e10) / uint256(fri.answer);
-        uint256 usdcBefore = IERC20(USDC).balanceOf(holder);
+        usdcBefore = IERC20(USDC).balanceOf(holder);
         vm.prank(holder);
-        uint256 coverId = pool.buyCover(1, raw, 1);
+        uint256 coverId = pool.buyCover(1, (10_000e6 * 1e10) / uint256(fri.answer), 1);
         CoverPool.Cover memory c = pool.getCover(1, coverId);
         notional = c.notional;
         fee = c.premium;
+    }
 
-        // Close at the Friday shutdown: the reference price is the real last Friday print.
+    /// Close at the Friday shutdown (reference = real last Friday print), then settle with the real round id.
+    /// No mock at settlement, so the pool proves it is the first print itself.
+    function _closeAndSettle(Round memory fri, Round memory first) internal {
         vm.warp(uint256(FRI_CLOSE) + 1 minutes);
         pool.closeSession(1);
         assertEq(pool.getSession(1).refPrice, uint256(fri.answer), "reference price");
 
-        // Open: settle with the real round id. No mock, so the pool proves it is the first print itself.
         vm.clearMockedCalls();
         vm.warp(first.updatedAt + 1);
         pool.settle(1, first.id);
@@ -135,19 +145,18 @@ contract ForkReplayTest is Test {
         CoverPool.Session memory s = pool.getSession(1);
         assertEq(uint8(s.status), uint8(CoverPool.Status.Settled), "status");
         assertEq(s.settlePrice, uint256(first.answer), "settle price");
+    }
 
-        // Independent maths: pay (drop - 2%) of the notional, up to 10%.
-        uint256 ref = uint256(fri.answer);
-        uint256 settlePrice = uint256(first.answer);
-        uint256 expected;
-        if (settlePrice < ref) {
-            uint256 lost = ref - settlePrice;
-            uint256 ded = (ref * 2) / 100;
-            uint256 cap = (ref * 10) / 100;
-            if (lost > ded) expected = (notional * ((lost - ded) > cap ? cap : (lost - ded))) / ref;
-        }
-        pay = IERC20(USDC).balanceOf(holder) + fee - usdcBefore;
-        assertApproxEqAbs(pay, expected, 2e6, "payout versus independent maths");
+    /// Independent maths: pay (drop - 2%) of the notional, up to 10%.
+    function _expected(uint256 notional, uint256 ref, uint256 settlePrice) internal pure returns (uint256) {
+        if (settlePrice >= ref) return 0;
+        uint256 lost = ref - settlePrice;
+        uint256 ded = (ref * 2) / 100;
+        if (lost <= ded) return 0;
+        uint256 part = lost - ded;
+        uint256 cap = (ref * 10) / 100;
+        if (part > cap) part = cap;
+        return (notional * part) / ref;
     }
 
     function _pointLatestAt(Round memory r) internal {
