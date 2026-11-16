@@ -100,11 +100,14 @@
 .ex-chip:hover { background: rgba(245, 245, 247, 0.12); }
 .ex-chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .ex-chip:focus-visible, .ex-range:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
-.ex-range { display: block; width: 100%; height: 44px; margin: 0.4rem 0 0; background: transparent; appearance: none; -webkit-appearance: none; touch-action: pan-y; }
-.ex-range::-webkit-slider-runnable-track { height: 1px; background: rgba(245, 245, 247, 0.6); }
-.ex-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; margin-top: -14px; background: var(--acc); border: 0; border-radius: 0; }
-.ex-range::-moz-range-track { height: 1px; background: rgba(245, 245, 247, 0.6); }
-.ex-range::-moz-range-thumb { width: 28px; height: 28px; background: var(--acc); border: 0; border-radius: 0; }
+/* "input.ex-range" inside ".ex" so these beat the site-wide input[type="range"] rules in globals.css, which would
+   otherwise shrink this slider to a 1px line with a 14px handle that is hard to grab. */
+.ex input.ex-range { display: block; width: 100%; height: 44px; margin: 0.4rem 0 0; background: transparent; appearance: none; -webkit-appearance: none; touch-action: pan-y; cursor: pointer; }
+.ex input.ex-range::-webkit-slider-runnable-track { height: 1px; background: rgba(245, 245, 247, 0.6); }
+.ex input.ex-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; margin-top: -14px; background: var(--acc); border: 0; border-radius: 0; cursor: grab; transition: none; }
+.ex input.ex-range::-webkit-slider-thumb:hover { transform: none; }
+.ex input.ex-range::-moz-range-track { height: 1px; background: rgba(245, 245, 247, 0.6); }
+.ex input.ex-range::-moz-range-thumb { width: 28px; height: 28px; background: var(--acc); border: 0; border-radius: 0; cursor: grab; }
 
 /* ================= liquidity picture ================= */
 .pf { max-width: 24rem; }
