@@ -10,7 +10,7 @@ contract HardeningTest is Base {
     function _limitedPool(uint16 useBps, uint16 holderBps) internal {
         pool = new CoverPool(
             _usdcI(), _stockI(), _feedI(), keeper,
-            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, useBps, holderBps, false),
+            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, useBps, holderBps, false, 0),
             _tiers()
         );
         _fund(uw, POOL_SEED, 0);
@@ -52,10 +52,10 @@ contract HardeningTest is Base {
     function test_constructorRejectsBadLimits() public {
         vm.expectRevert(CoverPool.BadConfig.selector);
         new CoverPool(_usdcI(), _stockI(), _feedI(), keeper,
-            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 0, 10_000, false), _tiers());
+            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 0, 10_000, false, 0), _tiers());
         vm.expectRevert(CoverPool.BadConfig.selector);
         new CoverPool(_usdcI(), _stockI(), _feedI(), keeper,
-            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_001, false), _tiers());
+            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_001, false, 0), _tiers());
     }
 
     function test_onlyKeeperCanPause() public {

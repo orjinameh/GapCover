@@ -10,6 +10,7 @@ export function friendlyError(raw: string): string {
     [/FeedFrozen/, "The practice price is out of date. On the Demo page, press Start a night. It refreshes the price first."],
     [/NotHolder/, "You don't have enough stocks. Tap Get it free to add practice stocks."],
     [/BelowMinNotional/, "That is too small. The minimum is $10."],
+    [/DepositCapReached/, "The pool is full for now. This beta has a small limit on how much it can hold."],
     [/OneOffClosed/, "Single-night protection is closed. Protection is bought through a weekly subscription."],
     [/AlreadySubscribed/, "You already have a weekly subscription. Cancel it first to change it."],
     [/NotSubscribed/, "There is no running subscription on this account."],

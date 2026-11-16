@@ -35,6 +35,7 @@ contract CoverPool {
         uint16 maxUseBps; // most of the pool one night may reserve for payouts, 10_000 = no limit
         uint16 maxHolderBps; // most of the pool one wallet may reserve for payouts in one night, 10_000 = no limit
         bool subscriptionOnly; // true: cover can only be bought through subscriptions (renewMany), buyCover is closed
+        uint128 depositCap; // deposits stop when the pool's assets would exceed this (asset units). 0 = no cap
     }
 
     struct Session {
@@ -294,6 +295,7 @@ contract CoverPool {
     function deposit(uint256 assets, address to) external nonReentrant returns (uint256 minted) {
         if (locked()) revert PoolLocked();
         if (assets == 0) revert ZeroAmount();
+        if (p.depositCap != 0 && totalAssets() + assets > p.depositCap) revert DepositCapReached();
         minted = convertToShares(assets);
         if (minted == 0) revert ZeroShares();
         shares[to] += minted;
@@ -398,6 +400,7 @@ contract CoverPool {
     event Renewed(uint256 indexed id, address indexed holder, uint256 coverId);
     event RenewalSkipped(uint256 indexed id, address indexed holder);
 
+    error DepositCapReached();
     error OneOffClosed();
     error AlreadySubscribed();
     error NotSubscribed();
