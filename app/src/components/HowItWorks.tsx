@@ -1,4 +1,5 @@
 "use client";
+import { IS_BETA } from "@/lib/config";
 import Explainer from "./Explainer";
 
 export default function HowItWorks() {
@@ -18,7 +19,7 @@ export default function HowItWorks() {
           <p className="meta"><b>Can the pool run out?</b> It can pay out all the money it has set aside for a night, but never more than it holds. gGAP holders cannot lose more than they put in.</p>
           <p className="meta"><b>What stops everyone from using the pool at once?</b> One night can use only a share of the pool (15% in this version), and one account only a small share of that.</p>
           <p className="meta"><b>What if the price feed fails?</b> The night is cancelled and every fee is refunded.</p>
-          <p className="meta"><b>Is this real?</b> No. Practice stocks, play money, made-up prices. Not audited, not advice.</p>
+          <p className="meta"><b>Is this real?</b> {IS_BETA ? "Yes, in a small beta with real money. The code is not audited. Not advice." : "No. Practice stocks, play money, made-up prices. Not audited, not advice."}</p>
         </details>
       </div>
     </section>

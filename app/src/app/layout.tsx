@@ -5,7 +5,7 @@ import Shell from "@/components/Shell";
 
 export const metadata: Metadata = {
   title: "Gap Cover",
-  description: "Cover for the weekend gap on tokenized stocks. Base Sepolia testnet.",
+  description: process.env.NEXT_PUBLIC_CHAIN === "base" ? "Cover for the weekend gap on tokenized stocks. Unaudited beta on Base." : "Cover for the weekend gap on tokenized stocks. Base Sepolia testnet.",
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0b0b0c" };
 

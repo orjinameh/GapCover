@@ -58,7 +58,7 @@ export async function readSnapshot(me?: Address): Promise<Snapshot> {
   const stock = need("stock");
   const usdc = need("usdc");
   const feed = need("feed");
-  const spot = need("spot");
+  const spot = ADDR.spot; // none in the beta
   const rd = <T,>(address: Address, abi: Abi, functionName: string, args: readonly unknown[] = []) =>
     pub.readContract({ address, abi, functionName, args }) as Promise<T>;
 
@@ -69,7 +69,7 @@ export async function readSnapshot(me?: Address): Promise<Snapshot> {
     rd<boolean>(pool, POOL_ABI, "locked"),
     rd<bigint>(pool, POOL_ABI, "activeSession"),
     rd<readonly [bigint, bigint, bigint, bigint, bigint]>(feed, FEED_ABI, "latestRoundData"),
-    rd<bigint>(spot, SPOT_ABI, "price", [stock]),
+    spot ? rd<bigint>(spot, SPOT_ABI, "price", [stock]) : Promise.resolve(0n),
     // Only Light and Standard are offered. Tight stays in the contract but is hidden (see docs/phase2-spike.md).
     Promise.all([0, 1].map((i) => rd<readonly [number, number, number]>(pool, POOL_ABI, "tiers", [BigInt(i)]))),
   ]);
@@ -150,12 +150,12 @@ export async function send(
   return receipt;
 }
 
-export async function ensureAllowance(s: Signer, need_: bigint) {
+export async function ensureAllowance(s: Signer, need_: bigint, approveExactly?: bigint) {
   const usdc = need("usdc");
   const pool = need("pool");
   const cur = (await pub.readContract({ address: usdc, abi: ERC20_ABI, functionName: "allowance", args: [s.address, pool] })) as bigint;
   if (cur >= need_) return;
-  await send(s, usdc, ERC20_ABI, "approve", [pool, 2n ** 256n - 1n]);
+  await send(s, usdc, ERC20_ABI, "approve", [pool, approveExactly && approveExactly >= need_ ? approveExactly : 2n ** 256n - 1n]);
 }
 
 export { ADDR };

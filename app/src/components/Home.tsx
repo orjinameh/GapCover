@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { IS_BETA } from "@/lib/config";
 
 /** First page: what this is, two doors, how it works, what can go wrong. Server component, no wallet needed. */
 export default function Home() {
   return (
     <section className="market home">
       <aside className="rail">
-        <p className="meta">GapCover · practice version</p>
+        <p className="meta">GapCover · {IS_BETA ? "beta" : "practice version"}</p>
         <p className="lede">Weekend protection for tokenized stocks, paid for by the people who fund it.</p>
       </aside>
       <div className="stage">
@@ -43,7 +44,7 @@ export default function Home() {
         <div className="meta field__legal">
           <p><b>If you protect stocks:</b> on a calm weekend the fee is gone, like any insurance. In a very big drop you carry the part above the cap.</p>
           <p><b>If you hold gGAP:</b> in a market crash, many holders get paid at once and gGAP can lose a lot in one weekend. In our test on ten years of real prices, limiting one night to 15% of the pool kept the worst weekend near 13% to 14%. That is a simulation, not a promise.</p>
-          <p><b>Practice version:</b> play money, made-up prices, nothing here is real or audited. Not advice.</p>
+          <p>{IS_BETA ? <><b>Beta:</b> real money and small limits, on code that is not audited yet. Only use money you can afford to lose. Not advice.</> : <><b>Practice version:</b> play money, made-up prices, nothing here is real or audited. Not advice.</>}</p>
         </div>
         <p className="meta"><Link className="linkbtn" href="/how">See it with real numbers</Link></p>
       </div>

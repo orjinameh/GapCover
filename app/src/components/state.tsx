@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createWalletClient, custom, http, toHex, type Address } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { CHAIN, DEPLOYED, IS_LOCAL, RPC_URL } from "@/lib/config";
+import { CHAIN, DEPLOYED, IS_BETA, IS_LOCAL, RPC_URL } from "@/lib/config";
 import { pub, readSnapshot, type Signer, type Snapshot } from "@/lib/chain";
 
 type Eip1193 = { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> };
@@ -70,11 +70,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setHasInjected(typeof window !== "undefined" && !!window.ethereum);
-    const d = loadDemo();
+    const d = IS_BETA ? null : loadDemo(); // no demo wallet in the beta
     setDemo(d);
     try {
       const saved = localStorage.getItem("gapcover.mode");
-      if (saved === "demo") setMode("demo");
+      if (saved === "demo" && !IS_BETA) setMode("demo");
       if (saved === "browser" && window.ethereum) {
         void window.ethereum.request({ method: "eth_accounts" }).then((acc) => {
           const a = (acc as Address[])[0];
@@ -85,7 +85,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch {}
-    if (IS_LOCAL) {
+    if (IS_LOCAL && d) {
       void pub.request({ method: "anvil_setBalance" as never, params: [d.address, toHex(10n ** 19n)] as never }).catch(() => {});
     }
   }, []);

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DEPLOYED } from "@/lib/config";
+import { DEPLOYED, IS_BETA } from "@/lib/config";
 import { phaseOf, secondsLeft } from "@/lib/chain";
 import { fmtTokens, fmtUsd } from "@/lib/math";
 import { useApp } from "./state";
@@ -34,11 +34,14 @@ function WalletSheet() {
             {me && (
               <dl className="rows">
                 <div><dt>Network fee money</dt><dd>{(Number(me.eth) / 1e18).toFixed(4)}</dd></div>
-                <div><dt>Test dollars</dt><dd>{fmtUsd(me.usdc)}</dd></div>
+                <div><dt>{IS_BETA ? "USDC" : "Test dollars"}</dt><dd>{fmtUsd(me.usdc)}</dd></div>
                 <div><dt>Stocks</dt><dd>{fmtTokens(me.tokens)}</dd></div>
               </dl>
             )}
-            {me && me.eth === 0n && (
+            {me && me.eth === 0n && IS_BETA && (
+              <p className="meta warn">This account has no ETH for network fees. Add a small amount of ETH on Base to this address, then come back.</p>
+            )}
+            {me && me.eth === 0n && !IS_BETA && (
               <>
                 <p className="meta warn">This account has no network fee money, so it can't send anything yet. Copy the address, paste it into the free faucet, then come back.</p>
                 <button className="sheet__btn" onClick={() => { try { void navigator.clipboard.writeText(signer.address); } catch {} }}>
@@ -62,10 +65,12 @@ function WalletSheet() {
               <span>Use MetaMask or similar</span>
               <span className="meta">{hasInjected ? "Detected" : "Not found on this device"}</span>
             </button>
-            <button className="sheet__btn" onClick={useDemo}>
-              <span>Use a practice account</span>
-              <span className="meta">Nothing to install. Play money only</span>
-            </button>
+            {!IS_BETA && (
+              <button className="sheet__btn" onClick={useDemo}>
+                <span>Use a practice account</span>
+                <span className="meta">Nothing to install. Play money only</span>
+              </button>
+            )}
             {!hasInjected && (
               <a className="sheet__btn" href={`https://metamask.app.link/dapp/${typeof window !== "undefined" ? window.location.host + window.location.pathname : ""}`}>
                 <span>Open in the MetaMask app</span>
@@ -101,7 +106,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header className="bar">
-        <Link href="/" className="bar__brand">Gap Cover<span className="bar__tag">practice</span></Link>
+        <Link href="/" className="bar__brand">Gap Cover<span className="bar__tag">{IS_BETA ? "beta" : "practice"}</span></Link>
         <nav className="bar__nav" aria-label="Main">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} className={path === n.href ? "on" : ""}>{n.label}</Link>
@@ -116,9 +121,18 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {signer ? (wrongNetwork ? "Wrong network" : short(signer.address)) : "Connect"}
         </button>
       </header>
+      {IS_BETA && (
+        <div className="demo-note meta">
+          Unaudited beta with small limits. This uses real money and you can lose all of it. Not advice. Not for U.S. residents.
+        </div>
+      )}
       {children}
       <footer className="foot meta">
-        Practice version. Play money, nothing here is real. Not advice. Not for U.S. residents. <Link href="/demo" className="linkbtn">Practice tools</Link>
+        {IS_BETA ? (
+          <>Unaudited beta. Real money, small limits, you can lose all of it. Not advice. Not for U.S. residents.</>
+        ) : (
+          <>Practice version. Play money, nothing here is real. Not advice. Not for U.S. residents. <Link href="/demo" className="linkbtn">Practice tools</Link></>
+        )}
       </footer>
       <WalletSheet />
     </>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DEPLOYED, need } from "@/lib/config";
+import { DEPLOYED, IS_BETA, need } from "@/lib/config";
+import { friendlyError } from "@/lib/friendly";
 import { POOL_ABI, USDC_ABI } from "@/lib/abis";
 import { ensureAllowance, send } from "@/lib/chain";
 import { fmtUsd, parseUsd } from "@/lib/math";
@@ -51,7 +52,7 @@ export default function Underwrite() {
       setMsg({ ok: true, t: "Done." });
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);
-      setMsg({ ok: false, t: /User rejected|denied/i.test(m) ? "Cancelled." : /missing or invalid|insufficient funds|exceeds the balance/i.test(m) ? "This account has no network fee money. Open Your account, copy the address and get free test ETH for Base Sepolia." : m.split("\n")[0] });
+      setMsg({ ok: false, t: friendlyError(m) });
     } finally {
       setBusy(false);
       void refresh();
@@ -64,7 +65,7 @@ export default function Underwrite() {
   else if (snap && me) {
     if (snap.locked) dep = { label: "Buying paused for now", disabled: true };
     else if (a === 0n) dep = { label: "Enter an amount", disabled: true };
-    else if (a > me.usdc) dep = { label: "Not enough test dollars", disabled: true };
+    else if (a > me.usdc) dep = { label: IS_BETA ? "Not enough USDC" : "Not enough test dollars", disabled: true };
     else if (busy) dep = { label: "Confirm…", disabled: true };
     else
       dep = {
@@ -152,7 +153,7 @@ export default function Underwrite() {
                 onClick={() => void act("Withdrawal", async () => { await send(signer, need("pool"), POOL_ABI, "withdraw", [me.shares, signer.address]); })}
               />
             )}
-            {signer && !wrongNetwork && me && me.usdc < 100n * 10n ** 6n && (
+            {!IS_BETA && signer && !wrongNetwork && me && me.usdc < 100n * 10n ** 6n && (
               <MagneticButton small label="Get practice money" disabled={busy} onClick={() => void act("Faucet", async () => { await send(signer, need("usdc"), USDC_ABI, "faucet", [signer.address, 5_000n * 10n ** 6n]); })} />
             )}
           </div>
@@ -160,7 +161,7 @@ export default function Underwrite() {
         </div>
         <div className="meta field__legal">
           <p><b>Risk:</b> gGAP can lose value, and in a market crash it can lose a lot at once. Selling is paused while protection is active.</p>
-          <p><b>Practice version:</b> play money, nothing here is real. Not advice.</p>
+          <p>{IS_BETA ? <><b>Beta:</b> real money, unaudited code, small limits. The pool has a deposit cap, so a deposit can be refused when it is full. Not advice.</> : <><b>Practice version:</b> play money, nothing here is real. Not advice.</>}</p>
         </div>
       </div>
     </section>

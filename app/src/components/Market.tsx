@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEPLOYED, DEMO_TOKENS, TICKER, need } from "@/lib/config";
+import { DEPLOYED, DEMO_TOKENS, IS_BETA, TICKER, TOKEN_DECIMALS, need } from "@/lib/config";
 import { friendlyError } from "@/lib/friendly";
 import { POOL_ABI, STOCK_ABI, USDC_ABI } from "@/lib/abis";
 import { phaseOf, secondsLeft, send } from "@/lib/chain";
@@ -97,7 +97,7 @@ export default function Market() {
   return (
     <section className="market">
       <aside className="rail">
-        <p className="meta">{TICKER} · practice stock</p>
+        <p className="meta">{TICKER} · {IS_BETA ? "beta" : "practice stock"}</p>
         <div>
           <p className="big">{snap ? fmtPx(snap.feedPrice) : "…"}</p>
           <p className="meta">Price now, in $</p>
@@ -126,7 +126,7 @@ export default function Market() {
           <p className="meta"><b>What if the stock goes up?</b> You lose only the fee and keep the gain.</p>
           <p className="meta"><b>How long does it last?</b> Each weekend is covered separately and renews by itself. Cancel any time: up to two more weekends are still covered, then it stops. If you cannot pay one week, that weekend is not covered and you owe nothing.</p>
           <p className="meta"><b>What is not covered?</b> Drops during the day, and the first part of a drop (you take that). If something unusual happens, like a stock split, we cancel and refund your fee.</p>
-          <p className="meta"><b>Is this real?</b> No. Practice stocks, play money, and a made-up price anyone can change. A real version would use a trusted market price.</p>
+          <p className="meta"><b>Is this real?</b> {IS_BETA ? "Yes, with real money and small limits. Prices come from a Chainlink feed. The code is not audited yet, so only use money you can afford to lose." : "No. Practice stocks, play money, and a made-up price anyone can change. A real version would use a trusted market price."}</p>
         </details>
 
         <div className="flow">
@@ -177,12 +177,12 @@ export default function Market() {
 
         <div className="cta">
           <FeeMoneyNote />
-          {lowFunds && signer && !wrongNetwork && (
+          {!IS_BETA && lowFunds && signer && !wrongNetwork && (
             <p className="meta">
               Need practice money? <button className="linkbtn" disabled={busy} onClick={() => void faucet()}>Get it free</button>
             </p>
           )}
-          {!snap?.session && snap && (
+          {!IS_BETA && !snap?.session && snap && (
             <p className="meta">Protection is bought for each weekend. In this practice version you start a night on the <a className="linkbtn" href="/demo">Demo page</a>.</p>
           )}
           {err && <p className="meta warn">{err}</p>}
@@ -203,7 +203,7 @@ export default function Market() {
                   <p className="meta">{STATE_TEXT[c.state]}</p>
                   {(() => {
                     const px = c.session.refPrice > 0n ? c.session.refPrice : snap?.feedPrice ?? 0n;
-                    return px > 0n ? <p className="meta">{fmtTokens((c.notional * 10n ** 20n) / px)} stocks at ${fmtPx(px)} each</p> : null;
+                    return px > 0n ? <p className="meta">{fmtTokens((c.notional * 10n ** BigInt(TOKEN_DECIMALS + 2)) / px)} stocks at ${fmtPx(px)} each</p> : null;
                   })()}
                 </div>
                 <dl className="covers__n">

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Abi } from "viem";
-import { need } from "@/lib/config";
+import { IS_BETA, need } from "@/lib/config";
 import { friendlyError } from "@/lib/friendly";
 import { POOL_ABI } from "@/lib/abis";
 import { ensureAllowance, pub, send } from "@/lib/chain";
@@ -61,7 +61,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
         : raw === 0n
           ? "Enter how many stocks to protect, above."
           : raw > have
-            ? `You have ${fmtTokens(have)} stocks and are trying to protect ${fmtTokens(raw)}. Lower the amount, or get practice money above.`
+            ? `You have ${fmtTokens(have)} stocks and are trying to protect ${fmtTokens(raw)}. Lower the amount${IS_BETA ? "." : ", or get practice money above."}`
             : null;
 
   return (
@@ -92,7 +92,8 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
             onClick={() =>
               void act(async () => {
                 if (!signer) return;
-                await ensureAllowance(signer, premium);
+                // beta: approve 12 weekends of fees at a time instead of an unlimited amount
+                await ensureAllowance(signer, premium, IS_BETA ? premium * 12n : undefined);
                 await send(signer, need("pool"), POOL_ABI, "subscribe", [tierIdx, raw]);
               }, `Subscribed: ${fmtTokens(raw)} stocks at the ${tierName} level.`)
             }
@@ -103,6 +104,7 @@ export default function Subscribe({ raw, tierIdx, tierName, premium }: { raw: bi
         )}
       </div>
       {!running && why && <p className="meta warn">{why}</p>}
+      {IS_BETA && <p className="meta">In the beta you approve about 12 weekends of fees at a time. When that runs out, weekends are skipped until you subscribe again.</p>}
       <p className="meta">Subscribing lets the pool take each weekend&apos;s fee from your account. You can stop it any time by cancelling here. Cancelling stops the renewals but does not remove the permission, so to be fully sure, also remove it in your wallet.</p>
       {msg && <p className={`meta ${msg.ok ? "ok" : "warn"}`}>{msg.t}</p>}
     </div>

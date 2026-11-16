@@ -1,15 +1,19 @@
+import { IS_BETA } from "./config";
+
 /** Turns a failed transaction into one plain sentence. */
 export function friendlyError(raw: string): string {
   const m = raw;
   if (/User rejected|denied/i.test(m)) return "Cancelled.";
   if (/missing or invalid|insufficient funds|exceeds the balance/i.test(m))
-    return "This account has no network fee money. Open Your account, copy the address and get free test ETH for Base Sepolia.";
+    return IS_BETA
+      ? "This account has no ETH for network fees, or not enough USDC. Add a small amount of ETH on Base and try again."
+      : "This account has no network fee money. Open Your account, copy the address and get free test ETH for Base Sepolia.";
   const rules: [RegExp, string][] = [
     [/SaleClosed/, "Protection is not on sale right now. Start a new night on the Demo page, then buy within 2 minutes."],
     [/SessionNotActive/, "This night is no longer open. Start a new night on the Demo page."],
     [/FeedFrozen/, "The practice price is out of date. On the Demo page, press Start a night. It refreshes the price first."],
-    [/NotHolder/, "You don't have enough stocks. Tap Get it free to add practice stocks."],
-    [/BelowMinNotional/, "That is too small. The minimum is $10."],
+    [/NotHolder/, IS_BETA ? "You don't hold enough of this stock token." : "You don't have enough stocks. Tap Get it free to add practice stocks."],
+    [/BelowMinNotional/, "That is too small. The minimum is $50."],
     [/DepositCapReached/, "The pool is full for now. This beta has a small limit on how much it can hold."],
     [/OneOffClosed/, "Single-night protection is closed. Protection is bought through a weekly subscription."],
     [/AlreadySubscribed/, "You already have a weekly subscription. Cancel it first to change it."],

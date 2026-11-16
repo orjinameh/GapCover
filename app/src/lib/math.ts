@@ -1,13 +1,16 @@
 // Mirrors CoverPool math exactly (integer, rounding as in the contract). The chain stays the source of truth.
+import { TOKEN_DECIMALS } from "./config";
+
 export const WAD = 10n ** 18n;
+const TD = 10n ** BigInt(TOKEN_DECIMALS);
 
 export type Tier = { name: string; deductibleBps: number; capBps: number; premiumBps: number };
 
 export const TIER_NAMES = ["Light", "Standard", "Tight"];
 
-/** notional in 6 decimal USDC from raw 18 decimal tokens and an 8 decimal price */
+/** notional in 6 decimal USDC from raw stock tokens (TOKEN_DECIMALS) and an 8 decimal price */
 export function notionalOf(raw: bigint, price: bigint): bigint {
-  return (raw * price) / 10n ** 20n;
+  return (raw * price) / 10n ** BigInt(TOKEN_DECIMALS + 2);
 }
 
 export function premiumOf(notional: bigint, premiumBps: number): bigint {
@@ -45,8 +48,8 @@ export function fmtPx(v: bigint): string {
 }
 
 export function fmtTokens(v: bigint): string {
-  const whole = v / WAD;
-  const frac = (v % WAD).toString().padStart(18, "0").slice(0, 2);
+  const whole = v / TD;
+  const frac = (v % TD).toString().padStart(TOKEN_DECIMALS, "0").slice(0, 2);
   return `${whole}.${frac}`;
 }
 
@@ -59,5 +62,5 @@ export function parseUsd(s: string): bigint {
 export function parseTokens(s: string): bigint {
   const [w, f = ""] = s.trim().split(".");
   if (!/^\d*$/.test(w) || !/^\d*$/.test(f)) return 0n;
-  return BigInt(w || "0") * WAD + BigInt((f + "0".repeat(18)).slice(0, 18));
+  return BigInt(w || "0") * TD + BigInt((f + "0".repeat(TOKEN_DECIMALS)).slice(0, TOKEN_DECIMALS));
 }
