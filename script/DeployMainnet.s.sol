@@ -22,6 +22,7 @@ import {IAggregatorV3} from "../src/interfaces/IAggregatorV3.sol";
 /// Real:                    add  --broadcast
 contract DeployMainnet is Script {
     address constant USDC = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913; // native USDC on Base
+    address constant SEQUENCER_FEED = 0xBCF85224fc0756B9Fa45aA7892530B47e10b6433; // Chainlink L2 sequencer uptime, Base mainnet
 
     function run() external {
         uint256 pk = vm.envUint("DEPLOYER_PRIVATE_KEY");
@@ -47,7 +48,10 @@ contract DeployMainnet is Script {
             maxUseBps: 1500, // one night may reserve at most 15% of the pool
             maxHolderBps: 500, // one wallet at most 5% of the pool
             subscriptionOnly: true,
-            depositCap: uint128(capUsd * 1e6)
+            depositCap: uint128(capUsd * 1e6),
+            sequencerFeed: SEQUENCER_FEED,
+            sequencerGrace: 1 hours, // wait one hour after the sequencer comes back
+            minSettleBps: 5000 // a settle price under 50% of the close price is treated as a bad print
         });
 
         vm.startBroadcast(pk);

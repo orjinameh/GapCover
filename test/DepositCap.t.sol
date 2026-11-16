@@ -12,7 +12,7 @@ contract DepositCapTest is Base {
         super.setUp();
         pool = new CoverPool(
             _usdcI(), _stockI(), _feedI(), keeper,
-            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_000, false, 2_000e6),
+            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_000, false, 2_000e6, address(0), 0, 0),
             _tiers()
         );
         _fund(uw, POOL_SEED, 0);
@@ -48,7 +48,7 @@ contract DepositCapTest is Base {
     function test_zeroCapMeansNoLimit() public {
         pool = new CoverPool(
             _usdcI(), _stockI(), _feedI(), keeper,
-            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_000, false, 0),
+            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_000, false, 0, address(0), 0, 0),
             _tiers()
         );
         _fund(uw, POOL_SEED, 0);

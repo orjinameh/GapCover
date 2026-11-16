@@ -37,7 +37,7 @@ const account = process.env.KEEPER_PRIVATE_KEY ? privateKeyToAccount(process.env
 const POOL_ABI = parseAbi([
   "function activeSession() view returns (uint256)",
   "function getSession(uint256) view returns ((uint64 saleStart, uint64 closeTime, uint64 openTime, uint8 status, uint32 coverCount, uint128 reserved, uint128 premiums, uint256 refPrice, uint256 settlePrice, uint256 multiplierAtClose))",
-  "function p() view returns (uint32 refMaxAge, uint32 printWindow, uint32 voidGrace, uint32 buyCutoff, uint32 lockWindow, uint16 maxCovers, uint128 minNotional, uint16 maxUseBps, uint16 maxHolderBps, bool subscriptionOnly)",
+  "function params() view returns ((uint32 refMaxAge, uint32 printWindow, uint32 voidGrace, uint32 buyCutoff, uint32 lockWindow, uint16 maxCovers, uint128 minNotional, uint16 maxUseBps, uint16 maxHolderBps, bool subscriptionOnly, uint128 depositCap, address sequencerFeed, uint32 sequencerGrace, uint16 minSettleBps))",
   "function subscribersLength() view returns (uint256)",
   "function subscriberAt(uint256) view returns (address)",
   "function subscriptionDue(uint256 id, address who) view returns (bool)",
@@ -90,8 +90,7 @@ async function firstPrintRound(open) {
 async function pass() {
   const block = await pub.getBlock();
   const now = block.timestamp;
-  const p = await read("p");
-  const [, printWindow, voidGrace, buyCutoff, lockWindow] = p;
+  const { printWindow, voidGrace, buyCutoff, lockWindow } = await read("params");
   const active = await read("activeSession");
 
   if (active === 0n) {

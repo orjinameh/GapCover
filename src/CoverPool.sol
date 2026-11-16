@@ -36,6 +36,9 @@ contract CoverPool {
         uint16 maxHolderBps; // most of the pool one wallet may reserve for payouts in one night, 10_000 = no limit
         bool subscriptionOnly; // true: cover can only be bought through subscriptions (renewMany), buyCover is closed
         uint128 depositCap; // deposits stop when the pool's assets would exceed this (asset units). 0 = no cap
+        address sequencerFeed; // Chainlink L2 sequencer uptime feed. address(0) = no check
+        uint32 sequencerGrace; // after the sequencer comes back, wait this long before trusting prices
+        uint16 minSettleBps; // a settle price below this share of the close price is refused as suspect. 0 = no bound
     }
 
     struct Session {
@@ -76,7 +79,7 @@ contract CoverPool {
     uint256 internal immutable notionalMul;
     uint256 internal immutable notionalDiv;
 
-    Params public p;
+    Params internal p;
     Tier[] public tiers;
 
     mapping(uint256 => Session) internal sessions;
@@ -158,6 +161,7 @@ contract CoverPool {
 
     constructor(IERC20 asset_, IB20Stock stock_, IAggregatorV3 feed_, address keeper_, Params memory params, Tier[] memory tiers_) {
         if (address(asset_) == address(0) || address(stock_) == address(0) || address(feed_) == address(0)) revert BadConfig();
+        if (params.minSettleBps > 10_000) revert BadConfig();
         if (params.maxCovers == 0 || params.printWindow == 0 || params.refMaxAge == 0) revert BadConfig();
         if (params.maxUseBps == 0 || params.maxUseBps > 10_000 || params.maxHolderBps == 0 || params.maxHolderBps > 10_000) revert BadConfig();
         if (tiers_.length == 0 || tiers_.length > 8) revert BadConfig();
@@ -344,6 +348,7 @@ contract CoverPool {
 
     function _checkSale(Session storage s, uint256 rawAmount, uint8 tier) internal view {
         if (salesPaused) revert SalesPaused();
+        _sequencerOk();
         if (s.status != Status.Scheduled) revert SessionNotActive();
         if (block.timestamp < s.saleStart || block.timestamp + p.buyCutoff > s.closeTime) revert SaleClosed();
         if (tier >= tiers.length) revert BadTier();
@@ -400,6 +405,9 @@ contract CoverPool {
     event Renewed(uint256 indexed id, address indexed holder, uint256 coverId);
     event RenewalSkipped(uint256 indexed id, address indexed holder);
 
+    error SequencerDown();
+    error SequencerGrace();
+    error PriceOutOfBounds();
     error DepositCapReached();
     error OneOffClosed();
     error AlreadySubscribed();
@@ -492,6 +500,7 @@ contract CoverPool {
     function closeSession(uint256 id) external {
         Session storage s = sessions[id];
         if (s.status != Status.Scheduled) revert NotClosable();
+        _sequencerOk();
         if (block.timestamp < s.closeTime || block.timestamp > uint256(s.closeTime) + p.lockWindow) revert NotClosable();
         (uint256 price, uint256 updatedAt) = _latest();
         if (updatedAt == 0 || updatedAt + p.refMaxAge < s.closeTime || updatedAt >= s.openTime) revert FeedStale();
@@ -506,7 +515,11 @@ contract CoverPool {
         Session storage s = sessions[id];
         if (s.status != Status.Closed) revert NotSettleable();
         if (block.timestamp < s.openTime || block.timestamp > uint256(s.openTime) + p.printWindow + p.voidGrace) revert NotSettleable();
+        _sequencerOk();
         uint256 settlePrice = _firstPrint(s.openTime, roundId);
+        // A glitch print (the feed is flagged high risk and can print zero or far-off prices) must not pay out.
+        // Refused prints leave the night open; after the grace period anyone can void it and every fee is refunded.
+        if (p.minSettleBps != 0 && settlePrice * 10_000 < s.refPrice * p.minSettleBps) revert PriceOutOfBounds();
         if (_multiplierMoved(s)) revert MultiplierChanged();
 
         s.settlePrice = settlePrice;
@@ -577,6 +590,11 @@ contract CoverPool {
         return (r.sessionId, r.coverId);
     }
 
+    /// All deployment settings in one call (the settings struct is not a public variable, it is too wide for a getter).
+    function params() external view returns (Params memory) {
+        return p;
+    }
+
     function tiersLength() external view returns (uint256) {
         return tiers.length;
     }
@@ -586,6 +604,15 @@ contract CoverPool {
     }
 
     // ---------------------------------------------------------------- internals
+
+    /// Reverts if the L2 sequencer is down, or came back less than sequencerGrace ago.
+    function _sequencerOk() internal view {
+        address f = p.sequencerFeed;
+        if (f == address(0)) return;
+        (, int256 answer, uint256 startedAt,,) = IAggregatorV3(f).latestRoundData();
+        if (answer != 0) revert SequencerDown();
+        if (block.timestamp - startedAt <= p.sequencerGrace) revert SequencerGrace();
+    }
 
     function _latest() internal view returns (uint256 price, uint256 updatedAt) {
         (, int256 answer,, uint256 u,) = feed.latestRoundData();

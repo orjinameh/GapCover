@@ -187,7 +187,7 @@ contract SubscriptionTest is Base {
     function test_limitsApplyToRenewals() public {
         pool = new CoverPool(
             _usdcI(), _stockI(), _feedI(), keeper,
-            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 100, false, 0),
+            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 100, false, 0, address(0), 0, 0),
             _tiers()
         ); // one wallet may reserve 1% of the pool = $1,000
         _fund(uw, POOL_SEED, 0);

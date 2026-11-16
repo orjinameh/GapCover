@@ -47,7 +47,10 @@ contract Deploy is Script {
             maxUseBps: 1500, // one night may reserve at most 15% of the pool
             maxHolderBps: 500, // one wallet may reserve at most 5% of the pool
             subscriptionOnly: false, // practice demo only: the one-click Demo simulator buys one-off cover. A mainnet deploy sets this to true.
-            depositCap: 0 // no cap on the practice network
+            depositCap: 0, // no cap on the practice network
+            sequencerFeed: address(0), // no sequencer on the practice setup
+            sequencerGrace: 0,
+            minSettleBps: 0
         });
 
         CoverPool pool = new CoverPool(

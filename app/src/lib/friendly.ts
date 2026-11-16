@@ -14,6 +14,8 @@ export function friendlyError(raw: string): string {
     [/FeedFrozen/, "The practice price is out of date. On the Demo page, press Start a night. It refreshes the price first."],
     [/NotHolder/, IS_BETA ? "You don't hold enough of this stock token." : "You don't have enough stocks. Tap Get it free to add practice stocks."],
     [/BelowMinNotional/, "That is too small. The minimum is $50."],
+    [/SequencerDown|SequencerGrace/, "The network is recovering from an outage, so protection is paused for a short while. Try again later."],
+    [/PriceOutOfBounds/, "The price looks wrong, so this night will not pay out. If it stays that way, the night is cancelled and every fee is refunded."],
     [/DepositCapReached/, "The pool is full for now. This beta has a small limit on how much it can hold."],
     [/OneOffClosed/, "Single-night protection is closed. Protection is bought through a weekly subscription."],
     [/AlreadySubscribed/, "You already have a weekly subscription. Cancel it first to change it."],

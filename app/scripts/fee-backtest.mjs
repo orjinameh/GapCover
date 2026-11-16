@@ -48,12 +48,14 @@ function readPrices(file) {
 }
 
 /** Weekend gaps as drops in percent (positive = price fell). */
+let skipped = 0;
 function weekendGaps(rows) {
   const out = [];
   for (let i = 1; i < rows.length; i++) {
     const days = (rows[i].t - rows[i - 1].t) / 86400000;
     if (days < 3) continue;
-    out.push({ year: new Date(rows[i].t).getUTCFullYear(), date: new Date(rows[i].t).toISOString().slice(0, 10), drop: ((rows[i - 1].close - rows[i].open) / rows[i - 1].close) * 100 });
+    if (days > 4) { skipped++; continue; } // a longer gap means missing trading days in the file, not a weekend
+    out.push({ year: new Date(rows[i].t).getUTCFullYear(), date: new Date(rows[i].t).toISOString().slice(0, 10), days, drop: ((rows[i - 1].close - rows[i].open) / rows[i - 1].close) * 100 });
   }
   return out;
 }
@@ -66,6 +68,7 @@ function report(label, gaps) {
   console.log(`\n=== ${label}: ${gaps.length} weekends (${gaps[0]?.date} to ${gaps[gaps.length - 1]?.date}) ===`);
   if (gaps.length === 0) return;
   const drops = gaps.map((g) => g.drop);
+  console.log("  five biggest drops: " + [...gaps].sort((a, b) => b.drop - a.drop).slice(0, 5).map((g) => `${g.date} ${g.drop.toFixed(1)}% (${g.days}d gap)`).join(", "));
   console.log(`  biggest weekend drop ${pct(Math.max(...drops))}, 99th percentile ${pct(quantile(drops, 0.99))}, 95th ${pct(quantile(drops, 0.95))}, weekends down 2%+ : ${drops.filter((d) => d > 2).length}`);
   console.log("  level      fee     pays on   avg payout  loss ratio  break-even fee  fee for 70%  worst 4 weekends");
   for (const t of TIERS) {
@@ -91,7 +94,9 @@ function report(label, gaps) {
 
 const all = [];
 for (const f of FILES) {
+  skipped = 0;
   const gaps = weekendGaps(readPrices(f));
+  if (skipped) console.log(`\n${f}: skipped ${skipped} gap(s) longer than 4 days (missing trading days in the file)`);
   report(f, gaps);
   all.push(...gaps);
 }

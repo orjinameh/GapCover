@@ -64,7 +64,7 @@ contract ForkRealTest is Test {
             IB20Stock(address(token)),
             IAggregatorV3(NVDA_FEED),
             address(this), // this test acts as the keeper
-            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_000, false, 0),
+            CoverPool.Params(REF_MAX_AGE, PRINT_WINDOW, VOID_GRACE, BUY_CUTOFF, LOCK_WINDOW, 64, 10e6, 10_000, 10_000, false, 0, address(0), 0, 0),
             t
         );
 
