@@ -43,7 +43,7 @@ contract DeployMainnet is Script {
             voidGrace: 6 hours, // after that, how long settle stays possible before anyone can void
             buyCutoff: 10 minutes,
             lockWindow: 1 hours,
-            maxCovers: 32,
+            maxCovers: 100, // measured: settling or voiding 150 covers fits well inside one transaction
             minNotional: 50e6, // $50
             maxUseBps: 1500, // one night may reserve at most 15% of the pool
             maxHolderBps: 500, // one wallet at most 5% of the pool

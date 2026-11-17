@@ -73,11 +73,12 @@ export default function SessionControls() {
             if (!signer) return;
             const n = Number(await pub.readContract({ address: need("pool"), abi: POOL_ABI, functionName: "subscribersLength" }));
             const list = await Promise.all(
-              Array.from({ length: Math.min(n, 32) }, (_, i) =>
+              Array.from({ length: Math.min(n, 100) }, (_, i) =>
                 pub.readContract({ address: need("pool"), abi: POOL_ABI, functionName: "subscriberAt", args: [BigInt(i)] }) as Promise<`0x${string}`>,
               ),
             );
-            if (list.length > 0) await send(signer, need("pool"), POOL_ABI, "renewMany", [snap.activeId, list]);
+            // renew in batches of 20 so each transaction stays small
+            for (let i = 0; i < list.length; i += 20) await send(signer, need("pool"), POOL_ABI, "renewMany", [snap.activeId, list.slice(i, i + 20)]);
           })} />
         <MagneticButton small label="Cancel the night" disabled={!canVoid} onClick={() => void act("Cancel the night", async () => { if (signer) await send(signer, need("pool"), POOL_ABI, "voidSession", [snap.activeId]); })} />
       </div>

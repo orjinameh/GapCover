@@ -159,11 +159,11 @@ contract CoverPool {
         _lock = 1;
     }
 
-    constructor(IERC20 asset_, IB20Stock stock_, IAggregatorV3 feed_, address keeper_, Params memory params, Tier[] memory tiers_) {
+    constructor(IERC20 asset_, IB20Stock stock_, IAggregatorV3 feed_, address keeper_, Params memory params_, Tier[] memory tiers_) {
         if (address(asset_) == address(0) || address(stock_) == address(0) || address(feed_) == address(0)) revert BadConfig();
-        if (params.minSettleBps > 10_000) revert BadConfig();
-        if (params.maxCovers == 0 || params.printWindow == 0 || params.refMaxAge == 0) revert BadConfig();
-        if (params.maxUseBps == 0 || params.maxUseBps > 10_000 || params.maxHolderBps == 0 || params.maxHolderBps > 10_000) revert BadConfig();
+        if (params_.minSettleBps > 10_000) revert BadConfig();
+        if (params_.maxCovers == 0 || params_.printWindow == 0 || params_.refMaxAge == 0) revert BadConfig();
+        if (params_.maxUseBps == 0 || params_.maxUseBps > 10_000 || params_.maxHolderBps == 0 || params_.maxHolderBps > 10_000) revert BadConfig();
         if (tiers_.length == 0 || tiers_.length > 8) revert BadConfig();
         for (uint256 i; i < tiers_.length; ++i) {
             Tier memory t = tiers_[i];
@@ -174,7 +174,7 @@ contract CoverPool {
         stock = stock_;
         feed = feed_;
         keeper = keeper_;
-        p = params;
+        p = params_;
         uint8 ad = asset_.decimals();
         uint8 td = stock_.decimals();
         uint8 fd = feed_.decimals();

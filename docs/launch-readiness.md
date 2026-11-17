@@ -34,7 +34,7 @@ Last updated 16 Nov 2026. Reflects the contract, app and scripts as built. All 1
 ## Design issues, and where they stand
 
 1. **Whole-pool lock can be triggered cheaply.** Partly fixed: the minimum cover is $50 (was $10). The lock is still global. Per-depositor queues remain an option.
-2. **Payout loop is push-based, 32 covers per night.** Not fixed. Subscribers can fill a night. In the beta, one-off buying is closed so only subscribers use the slots.
+2. **Payout loop is push-based, 100 covers per night.** Raised from 32 after a gas test (test/Capacity.t.sol: 150 covers settle and void in one transaction). A bigger night needs pull-based claims. In the beta, one-off buying is closed so only subscribers use the slots.
 3. **A quiet weekend with no print voids the night**, so providers earn nothing for carrying risk. Pricing assumes this is rare. Not measured.
 4. **Insurable interest is now checked at payout.** A cover pays only for the stock the wallet still holds when the night settles (a holder who moved half of it away gets half; all of it, nothing). Still not airtight: a wallet could sell after the open print and before settlement, and settlement normally lands within minutes of the open.
 5. **Prices.** Backtested on ten years of weekends for four stocks (`docs/phase2-spike.md`). Light is 0.40%, Standard 0.60%, Tight is hidden. Demand at these prices is untested.

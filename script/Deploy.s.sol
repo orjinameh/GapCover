@@ -42,8 +42,8 @@ contract Deploy is Script {
             voidGrace: 600,
             buyCutoff: 0,
             lockWindow: 30,
-            maxCovers: 32,
-            minNotional: 50e6, // $50 minimum, so tiny covers cannot fill the 32 slots
+            maxCovers: 100,
+            minNotional: 50e6, // $50 minimum, so tiny covers cannot fill the night
             maxUseBps: 1500, // one night may reserve at most 15% of the pool
             maxHolderBps: 500, // one wallet may reserve at most 5% of the pool
             subscriptionOnly: false, // practice demo only: the one-click Demo simulator buys one-off cover. A mainnet deploy sets this to true.

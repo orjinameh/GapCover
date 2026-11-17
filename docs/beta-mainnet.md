@@ -39,4 +39,4 @@ NEXT_PUBLIC_RPC_URL=<a dedicated Base RPC url. The public one is rate limited an
 - The Chainlink feed's behaviour on holidays is assumed, not measured.
 - Legal and regulatory review has not been done. It looks like insurance in some places.
 - One keeper wallet can schedule nights and pause new sales. A multisig is better.
-- The 32-covers-per-night limit means subscribers can fill a night before one-off buyers. One-off is closed in the beta.
+- A night holds at most 100 covers (measured: 150 settle and void inside one transaction). Subscribers can fill a night before one-off buyers. One-off is closed in the beta.
