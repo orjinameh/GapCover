@@ -36,7 +36,7 @@ Last updated 16 Nov 2026. Reflects the contract, app and scripts as built. All 1
 1. **Whole-pool lock can be triggered cheaply.** Partly fixed: the minimum cover is $50 (was $10). The lock is still global. Per-depositor queues remain an option.
 2. **Payout loop is push-based, 32 covers per night.** Not fixed. Subscribers can fill a night. In the beta, one-off buying is closed so only subscribers use the slots.
 3. **A quiet weekend with no print voids the night**, so providers earn nothing for carrying risk. Pricing assumes this is rare. Not measured.
-4. **Insurable interest is weak.** A holder can buy cover and move the tokens out before the open. Not fixed. A real exposure for paid claims.
+4. **Insurable interest is now checked at payout.** A cover pays only for the stock the wallet still holds when the night settles (a holder who moved half of it away gets half; all of it, nothing). Still not airtight: a wallet could sell after the open print and before settlement, and settlement normally lands within minutes of the open.
 5. **Prices.** Backtested on ten years of weekends for four stocks (`docs/phase2-spike.md`). Light is 0.40%, Standard 0.60%, Tight is hidden. Demand at these prices is untested.
 6. **Adverse selection.** Buyers who show up only before bad weekends cut provider returns from about 24% to 28% to about 18% a year in the simulation. Weekly subscriptions with a two-night wait and a notice on cancelling are the answer; one-off buying is closed with `subscriptionOnly` (on in the mainnet script, off on the practice network because the Demo simulator needs it).
 7. **gGAP is an ERC-20.** Shares are transferable, also while the pool is locked. A market price can drift from the pool value around a risky weekend.
@@ -49,7 +49,7 @@ Insur, Nexus Mutual and Symbiotic are exploration targets only. None has agreed 
 
 1. Audit and legal review.
 2. Run the keeper against a live pool for several weekends, including one holiday.
-3. Insurable-interest check (design issue 4) and pull-based claims (design issue 2).
+3. Pull-based claims (design issue 2). The insurable-interest check at payout is done.
 4. Monitoring, and a multisig for the keeper and pause role.
 5. Demand: nobody has yet shown they will pay about 0.6% a weekend, every weekend.
 6. The first real night on Base mainnet must be tiny and watched by hand, because the real token cannot be tested locally.

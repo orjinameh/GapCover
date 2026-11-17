@@ -533,6 +533,8 @@ contract CoverPool {
             Cover storage c = covers[id][i];
             uint256 pay = _payout(c, s.refPrice, settlePrice);
             if (pay == 0) continue;
+            pay = _scaleToHoldings(id, c.holder, pay);
+            if (pay == 0) continue;
             total += pay;
             _push(c.holder, pay);
             emit Payout(id, i, c.holder, pay);
@@ -600,7 +602,9 @@ contract CoverPool {
     }
 
     function previewPayout(uint256 id, uint256 coverId, uint256 settlePrice) external view returns (uint256) {
-        return _payout(covers[id][coverId], sessions[id].refPrice, settlePrice);
+        Cover storage c = covers[id][coverId];
+        uint256 pay = _payout(c, sessions[id].refPrice, settlePrice);
+        return pay == 0 ? 0 : _scaleToHoldings(id, c.holder, pay);
     }
 
     // ---------------------------------------------------------------- internals
@@ -648,6 +652,20 @@ contract CoverPool {
 
     function _multiplierMoved(Session storage s) internal view returns (bool) {
         return stock.uiMultiplier() != s.multiplierAtClose || stock.effectiveAt() > block.timestamp;
+    }
+
+    /// A cover pays only for stock the wallet still holds when the night settles.
+    /// If it moved some or all of the stock it covered after buying, the payout shrinks by the same share.
+    /// If the token cannot be read, the payout is not reduced, so one odd token can never block a whole night.
+    function _scaleToHoldings(uint256 id, address holder, uint256 pay) internal view returns (uint256) {
+        uint256 covered = coveredRaw[id][holder];
+        if (covered == 0) return pay;
+        try stock.balanceOf(holder) returns (uint256 bal) {
+            if (bal >= covered) return pay;
+            return (pay * bal) / covered;
+        } catch {
+            return pay;
+        }
     }
 
     function _payout(Cover storage c, uint256 ref, uint256 settlePrice) internal view returns (uint256) {
